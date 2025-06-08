@@ -1,0 +1,9 @@
+{
+    "buildCommand": "yarn build:demo",
+    "outputDirectory": "dist/app",
+    "framework": "vite",
+    "rewrites": [
+      { "source": "/(.*)", "destination": "/" }
+    ],
+    "trailingSlash": false
+  }
