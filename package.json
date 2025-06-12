@@ -138,10 +138,7 @@
     "typescript": "^5.2.2",
     "vite": "^6.3.5",
     "vite-plugin-node-polyfills": "^0.22.0",
-    "vite-tsconfig-paths": "^4.3.2",
-    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "dotenv": "^16.0.0",
-    "hardhat": "^2.20.0"
+    "vite-tsconfig-paths": "^4.3.2"
   },
   "peerDependencies": {
     "@rainbow-me/rainbowkit": "^2.1.3",
