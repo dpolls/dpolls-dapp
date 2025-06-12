@@ -32,19 +32,14 @@
     "build-storybook": "storybook build",
     "preview": "vite preview",
     "predeploy": "yarn install && yarn build",
-    "deploy": "gh-pages -d dist",
-    "test": "hardhat test",
-    "compile": "hardhat compile",
-    "check-balance": "npx hardhat run project/test/check-balance.js --network hardhat"
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@account-abstraction/contracts": "0.6.0",
     "@babel/runtime": "^7.27.1",
     "@emotion/is-prop-valid": "latest",
     "@eslint/compat": "^1.2.0",
-    "@eth-optimism/contracts-ts": "^0.17.2",
     "@hookform/resolvers": "^3.9.1",
-    "@openzeppelin/contracts": "^5.3.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
