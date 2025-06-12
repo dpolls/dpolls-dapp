@@ -563,7 +563,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">1</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Input your question:</strong> What feedback are you aiming to gather?
+                      <strong>Indentify your subject:</strong> What feedback are you looking for?
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -571,7 +571,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">2</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Select a Category</strong> to which your poll belongs to
+                      <strong>Select a Category</strong>
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -587,7 +587,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">4</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Generate your options</strong> to which respondents select. Use AI to automatically generate the options or input them yourself.
+                      <strong>Generate options</strong> for respondents to select. Use AI to generate them for you or input them yourself.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -595,7 +595,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">5</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Choose who will fund the rewards:</strong> Fund it yourself or crowdfund it.
+                      <strong>Choose funds the rewards:</strong> Fund it yourself or crowdfund it.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -603,7 +603,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">6</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Let NERO AA Payment framework handle the gas fees for your users.</strong> Give back to your community.
+                      <strong>Let NERO AA Payment handle the gas fees.</strong> Choose to give back to your community.
                     </p>
                   </div>
                 </div>
