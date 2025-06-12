@@ -556,14 +556,14 @@ export default function LandingPage() {
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">How it works</h2>
               <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-6">To create a contest:</h3>
+                <h3 className="text-xl font-semibold mb-6">To create a poll:</h3>
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <span className="text-primary-foreground font-semibold text-sm text-white">1</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Pick your contest type:</strong> who can enter? who can vote?
+                      <strong>Input your question:</strong> What feedback are you aiming to gather?
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -571,7 +571,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">2</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Pick a gallery view or text view</strong>
+                      <strong>Select a Category</strong> to which your poll belongs to
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -579,7 +579,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">3</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Set duration</strong> for entry and voting periods
+                      <strong>Set a duration</strong> for the community to respond
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -587,7 +587,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">4</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Set charges</strong> for entering and voting
+                      <strong>Generate your options</strong> to which respondents select. Use AI to automatically generate the options or input them yourself.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -595,8 +595,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">5</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Bonus:</strong> add a rewards pool. Fund it yourself—or with money you earn from the
-                      contest.
+                      <strong>Choose who will fund the rewards:</strong> Fund it yourself or crowdfund it.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -604,7 +603,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">6</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>And it's free.</strong> You just pay the cost to deploy (often just cents).
+                      <strong>Let NERO AA Payment framework handle the gas fees for your users.</strong> Give back to your community.
                     </p>
                   </div>
                 </div>
