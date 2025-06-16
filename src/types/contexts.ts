@@ -115,20 +115,6 @@ export interface ConfigContextProps {
     }
     loginMethodsOrder: string[]
   }
-  loginConfig: {
-    google: {
-      name: string
-      verifier: string
-      typeOfLogin: string
-      clientId: string
-    }
-    facebook: {
-      name: string
-      verifier: string
-      typeOfLogin: string
-      clientId: string
-    }
-  }
   currentNetworkIndex: number
   switchNetwork: () => void
   chains: WalletConfig['chains']

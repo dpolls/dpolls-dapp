@@ -27,20 +27,6 @@ interface Web3AuthConfig {
       uxMode: string
       modalZIndex: string
     }
-    loginConfig: {
-      google: {
-        name: string
-        verifier: string
-        typeOfLogin: string
-        clientId: string
-      }
-      facebook: {
-        name: string
-        verifier: string
-        typeOfLogin: string
-        clientId: string
-      }
-    }
   }
 }
 
@@ -94,21 +80,7 @@ export const rainbowWeb3AuthConnector = ({
         adapterSettings: {
           clientId: walletConfig.clientId,
           network: walletConfig.networkType,
-          uxMode: 'redirect',
-          loginConfig: {
-            google: {
-              name: walletConfig.loginConfig.google.name,
-              verifier: walletConfig.loginConfig.google.verifier,
-              typeOfLogin: 'google', // Pass on the login provider of the verifier you've created
-              clientId: walletConfig.loginConfig.google.clientId, // Pass on the Google `Client ID` here'
-            },
-            facebook: {
-              name: walletConfig.loginConfig.facebook.name,
-              verifier: walletConfig.loginConfig.facebook.verifier, // Pass the Verifier name here
-              typeOfLogin: 'facebook', // Pass on the login provider of the verifier you've created
-              clientId: walletConfig.loginConfig.facebook.clientId, // Pass on the Google `Client ID` here
-            },
-          },
+          uxMode: UX_MODE.REDIRECT,
         },
       })
 

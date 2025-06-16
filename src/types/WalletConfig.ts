@@ -47,20 +47,6 @@ export interface WalletConfig {
         uxMode: string
         modalZIndex: string
       }
-      loginConfig: {
-        google: {
-          name: string
-          verifier: string
-          typeOfLogin: string
-          clientId: string
-        }
-        facebook: {
-          name: string
-          verifier: string
-          typeOfLogin: string
-          clientId: string
-        }
-      }
     }
   }>
 }

@@ -1,3 +1,4 @@
+*.code-workspace
 .yarn/
 .DS_Store
 node_modules/
