@@ -14,7 +14,7 @@ const config = {
       chain: {
         name: 'NERO Testnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'testnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'sapphire_devnet' as WEB3AUTH_NETWORK_TYPE,
         rpc: 'https://rpc-testnet.nerochain.io',
         chainId: 689,
         explorer: 'https://testnet.neroscan.io',
@@ -37,7 +37,7 @@ const config = {
       },
       web3auth: {
         clientId: import.meta.env.VITE_TESTNET_WEB3AUTH_ID ?? '',
-        network: 'testnet',
+        networkType: 'sapphire_devnet' as WEB3AUTH_NETWORK_TYPE,
         uiConfig: {
           appName: 'NERO',
           mode: 'light',
@@ -70,7 +70,7 @@ const config = {
       chain: {
         name: 'NERO Mainnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'mainnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'sapphire_mainnet' as WEB3AUTH_NETWORK_TYPE,
         rpc: 'https://rpc.nerochain.io',
         chainId: 1689,
         explorer: 'https://neroscan.io',
@@ -93,7 +93,7 @@ const config = {
       },
       web3auth: {
         clientId: import.meta.env.VITE_MAINNET_WEB3AUTH_ID ?? '',
-        network: 'mainnet',
+        networkType: 'sapphire_mainnet' as WEB3AUTH_NETWORK_TYPE,
         uiConfig: {
           appName: 'NERO',
           mode: 'light',
@@ -109,13 +109,13 @@ const config = {
         loginConfig: {
           google: {
             name: 'google',
-            verifier: 'NeroTest-Google-Maintest',
+            verifier: 'dpolls-devnet',
             typeOfLogin: 'google',
             clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           },
           facebook: {
             name: 'facebook',
-            verifier: 'NeroTest-Facebook-Maintest',
+            verifier: 'dpolls-devnet',
             typeOfLogin: 'facebook',
             clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
           },

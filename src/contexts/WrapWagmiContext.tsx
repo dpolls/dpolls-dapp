@@ -78,7 +78,6 @@ export const WrapWagmiProvider: React.FC<WrapWagmiContextProps> = ({ children })
         uxMode: 'redirect',
         modalZIndex: '2147483647',
       },
-      loginConfig,
     },
   })
 
