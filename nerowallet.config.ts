@@ -14,7 +14,7 @@ const config = {
       chain: {
         name: 'NERO Testnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'testnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'sapphire_devnet' as WEB3AUTH_NETWORK_TYPE,
         rpc: 'https://rpc-testnet.nerochain.io',
         chainId: 689,
         explorer: 'https://testnet.neroscan.io',
@@ -70,7 +70,7 @@ const config = {
       chain: {
         name: 'NERO Mainnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'mainnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'sapphire_mainnet' as WEB3AUTH_NETWORK_TYPE,
         rpc: 'https://rpc.nerochain.io',
         chainId: 1689,
         explorer: 'https://neroscan.io',

@@ -587,7 +587,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">4</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Generate options</strong> for respondents to select. Use AI to generate them for you or input them yourself.
+                      <strong>Generate options.</strong> Use AI to generate them or input them yourself.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
@@ -595,7 +595,7 @@ export default function LandingPage() {
                       <span className="text-primary-foreground font-semibold text-sm text-white">5</span>
                     </div>
                     <p className="text-muted-foreground">
-                      <strong>Choose funds the rewards:</strong> Fund it yourself or crowdfund it.
+                      <strong>Choose who funds the rewards:</strong> Fund it yourself or crowdfund it.
                     </p>
                   </div>
                   <div className="flex items-start space-x-4">
