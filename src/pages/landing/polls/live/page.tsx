@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Link } from 'react-router-dom'
-import { Tag, Modal, Space, Button } from "antd"
+import { Tag, Card as AntdCard, Avatar, Button } from "antd";
 import { Input } from "@/components/ui_v3/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui_v3/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui_v3/select"
@@ -131,19 +131,21 @@ export default function LivePollsPage() {
     }
   };
   console.log('polls', polls)
-  const filteredPolls = polls.filter((poll) => {
+  const pollsNotEnded = polls.filter((poll) => {
+    return calculateTimeLeft(poll.endDate) !== "Ended";
+  })
+  const filteredPolls = pollsNotEnded.filter((poll) => {
     const matchesSearch =
       poll.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       poll.description.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = categoryFilter === "all" || poll.category === categoryFilter
     const matchesStatus = statusFilter === "all" || poll.status === statusFilter
-    const notEnded = calculateTimeLeft(poll.endDate) !== "Ended";
 
-    return matchesSearch && matchesCategory && matchesStatus && notEnded;
+    return matchesSearch && matchesCategory && matchesStatus;
   })
 
-  const categories = ["all", ...Array.from(new Set(polls.map((poll) => poll.category)))]
-  const statuses = ["all", ...Array.from(new Set(polls.map((poll) => poll.status)))]
+  const categories = ["all", ...Array.from(new Set(pollsNotEnded.map((poll) => poll.category)))]
+  const statuses = ["all", ...Array.from(new Set(pollsNotEnded.map((poll) => poll.status)))]
   console.log('categories', categories)
   console.log('statuses', statuses)
 
@@ -199,25 +201,43 @@ export default function LivePollsPage() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredPolls.length} of {polls.length} polls
+            Showing {filteredPolls.length} of {pollsNotEnded.length} polls
           </p>
         </div>
 
         {/* Polls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPolls.map((poll) => (
-            <PollCard
-              key={poll.id}
-              poll={poll}
-              type="active"
-              fetchPolls={fetchPolls}
-              AAaddress={AAaddress}
-            />
-          ))}
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 8 }).map((_, index) => (
+              <AntdCard loading={true} style={{ minWidth: 300 }}>
+                <AntdCard.Meta
+                  avatar={<Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />}
+                  title="Card title"
+                  description={
+                    <>
+                      <p>This is the description</p>
+                      <p>This is the description</p>
+                    </>
+                  }
+                />
+              </AntdCard>
+            ))
+          ) : (
+            filteredPolls.map((poll) => (
+              <PollCard
+                key={poll.id}
+                poll={poll}
+                type="active"
+                fetchPolls={fetchPolls}
+                AAaddress={AAaddress}
+              />
+            ))
+          )}
         </div>
 
         {/* No Results */}
-        {filteredPolls.length === 0 && (
+        {!isLoading && filteredPolls.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg mb-4">No polls found matching your criteria</p>
             <Button

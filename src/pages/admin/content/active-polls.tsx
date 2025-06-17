@@ -27,7 +27,10 @@ export default function ActivePolls({ polls, fetchPolls, AAaddress, handleTabCha
 
   const { isConnected } = useSignature();
   // Filter polls based on their status
-  const targetPolls = polls.filter(poll => poll.isOpen && (poll.status === "open"))
+  const pollsNotEnded = polls.filter((poll) => {
+    return calculateTimeLeft(poll.endDate) !== "Ended";
+  })
+  const targetPolls = pollsNotEnded.filter(poll => poll.isOpen && (poll.status === "open"))
 
   return (
     <div className="container mx-auto px-4 py-8">
