@@ -19,7 +19,7 @@ import LandingPageHeader from "@/pages/landing/landing-header";
 import { calculateTimeLeft } from "@/utils";
 import { getRandomBoolean } from "@/utils/booleanUtils";
 import { getTagColor } from "@/utils/tagColors";
-import { Tag } from "antd";
+import { Tag, Card as AntdCard, Avatar } from "antd";
 import { ArrowRight, Clock, Coins, Eye, Shield, Trophy, Users } from "lucide-react";
 
 const TypewriterText = () => {
@@ -348,57 +348,75 @@ export default function LandingPage() {
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Respond to Polls</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {featuredPolls.map((poll: any) => (
-                <Card key={poll.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex gap-2">
-                        <Tag
-                          color={getTagColor('category', poll.category)}
-                        >
-                          {poll.category}
-                        </Tag>
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 8 }).map((_, index) => (
+                  <AntdCard loading={true} style={{ minWidth: 300 }}>
+                    <AntdCard.Meta
+                      avatar={<Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />}
+                      title="Card title"
+                      description={
+                        <>
+                          <p>This is the description</p>
+                          <p>This is the description</p>
+                        </>
+                      }
+                    />
+                  </AntdCard>
+                ))
+              ) : (
+                featuredPolls.map((poll: any) => (
+                  <Card key={poll.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex gap-2">
+                          <Tag
+                            color={getTagColor('category', poll.category)}
+                          >
+                            {poll.category}
+                          </Tag>
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          <span>
+                            {featureFlagNew ? 
+                              poll.endDate && calculateTimeLeft(poll.endDate)
+                              :
+                              poll.timeLeft
+                            }
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3 mr-1" />
-                        <span>
+                      <CardTitle className="text-lg">{poll.subject}</CardTitle>
+                      <CardDescription>{poll.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center text-sm">
+                          <Users className="h-4 w-4 mr-1" />
                           {featureFlagNew ? 
-                            poll.endDate && calculateTimeLeft(poll.endDate)
+                            poll.responses.length
                             :
-                            poll.timeLeft
-                          }
-                        </span>
+                            poll.participants
+                          } participants
+                        </div>
+                        <div className="flex items-center text-sm font-semibold text-primary">
+                          <Trophy className="h-4 w-4 mr-1" />
+                          {featureFlagNew ? 
+                            parseFloat(ethers.utils.formatEther(poll.targetFund || '0'))
+                            :
+                            poll.prize
+                          } NERO
+                        </div>
                       </div>
-                    </div>
-                    <CardTitle className="text-lg">{poll.subject}</CardTitle>
-                    <CardDescription>{poll.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-center text-sm">
-                        <Users className="h-4 w-4 mr-1" />
-                        {featureFlagNew ? 
-                          poll.responses.length
-                          :
-                          poll.participants
-                        } participants
-                      </div>
-                      <div className="flex items-center text-sm font-semibold text-primary">
-                        <Trophy className="h-4 w-4 mr-1" />
-                        {featureFlagNew ? 
-                          parseFloat(ethers.utils.formatEther(poll.targetFund || '0'))
-                          :
-                          poll.prize
-                        } NERO
-                      </div>
-                    </div>
-                    <Button className="w-full" variant="outline" onClick={() => handleViewPoll(poll)}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Poll
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button className="w-full" variant="outline" onClick={() => handleViewPoll(poll)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Poll
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
             <div className="text-center">
               <Link to="/polls/live">
