@@ -390,7 +390,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                       </>
                     )}
                   </Button>
-                  </Tooltip>
+//                   </Tooltip>
                 :
                   <>
                     {/* <WalletConnectRoundedButton
