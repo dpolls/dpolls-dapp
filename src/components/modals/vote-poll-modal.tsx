@@ -371,7 +371,8 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                 </RadioGroup>
 
                 {isConnected ? 
-                  <Tooltip title={poll.status !== "open" ? "Poll not yet accepting responses" : null}>
+// TODO: Tooltip
+//                   <Tooltip title={poll.status !== "open" ? "Poll not yet accepting responses" : null}>
                   <Button
                     onClick={handleOptionVote}
                     disabled={isVoting || hasVoted || poll.status !== "open"}
