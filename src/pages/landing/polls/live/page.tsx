@@ -210,7 +210,12 @@ export default function LivePollsPage() {
           {isLoading ? (
             // Loading skeleton
             Array.from({ length: 8 }).map((_, index) => (
-              <AntdCard loading={true} style={{ minWidth: 300 }}>
+              <AntdCard
+                key={index}
+                loading={true}
+                style={{ minWidth: 300 }}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <AntdCard.Meta
                   avatar={<Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />}
                   title="Card title"

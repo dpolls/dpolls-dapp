@@ -1,5 +1,5 @@
 import NEROLogoSquareIcon from './src/assets/NERO-Logo-square.svg'
-import { WEB3AUTH_NETWORK_TYPE } from '@web3auth/base'
+import { WEB3AUTH_NETWORK, WEB3AUTH_NETWORK_TYPE } from '@web3auth/base'
 
 const config = {
   rainbowKitProjectId: '04309ed1007e77d1f119b85205bb779d',
@@ -14,7 +14,7 @@ const config = {
       chain: {
         name: 'NERO Testnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'sapphire_devnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'testnet',
         rpc: 'https://rpc-testnet.nerochain.io',
         chainId: 689,
         explorer: 'https://testnet.neroscan.io',
@@ -37,7 +37,7 @@ const config = {
       },
       web3auth: {
         clientId: import.meta.env.VITE_TESTNET_WEB3AUTH_ID ?? '',
-        networkType: 'sapphire_devnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
         uiConfig: {
           appName: 'NERO',
           mode: 'light',
@@ -53,13 +53,13 @@ const config = {
         loginConfig: {
           google: {
             name: 'google',
-            verifier: 'NeroTest-Google-Maintest',
+            verifier: 'dpolls-devnet',
             typeOfLogin: 'google',
             clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           },
           facebook: {
             name: 'facebook',
-            verifier: 'NeroTest-Facebook-Maintest',
+            verifier: 'dpolls-devnet',
             typeOfLogin: 'facebook',
             clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
           },
@@ -70,7 +70,7 @@ const config = {
       chain: {
         name: 'NERO Mainnet',
         logo: NEROLogoSquareIcon,
-        networkType: 'sapphire_mainnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: 'mainnet',
         rpc: 'https://rpc.nerochain.io',
         chainId: 1689,
         explorer: 'https://neroscan.io',
@@ -93,7 +93,7 @@ const config = {
       },
       web3auth: {
         clientId: import.meta.env.VITE_MAINNET_WEB3AUTH_ID ?? '',
-        networkType: 'sapphire_mainnet' as WEB3AUTH_NETWORK_TYPE,
+        networkType: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
         uiConfig: {
           appName: 'NERO',
           mode: 'light',
@@ -109,13 +109,13 @@ const config = {
         loginConfig: {
           google: {
             name: 'google',
-            verifier: 'dpolls-devnet',
+            verifier: 'dpolls-mainnet',
             typeOfLogin: 'google',
             clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           },
           facebook: {
             name: 'facebook',
-            verifier: 'dpolls-devnet',
+            verifier: 'dpolls-mainnet',
             typeOfLogin: 'facebook',
             clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
           },
