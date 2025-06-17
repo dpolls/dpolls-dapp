@@ -91,6 +91,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, config
         chains: config.chains,
         switchToNetwork,
         hasWeb3AuthConfig,
+        web3AuthNetwork: chainConfig.web3auth.networkType,
       }}
     >
       {children}

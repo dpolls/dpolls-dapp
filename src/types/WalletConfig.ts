@@ -34,7 +34,7 @@ export interface WalletConfig {
     }
     web3auth: {
       clientId: string
-      network: string
+      networkType: string
       uiConfig: {
         appName: string
         mode: string
@@ -46,6 +46,20 @@ export interface WalletConfig {
         loginMethodsOrder: string[]
         uxMode: string
         modalZIndex: string
+      }
+      loginConfig: {
+        google: {
+          name: string
+          verifier: string
+          typeOfLogin: string
+          clientId: string
+        }
+        facebook: {
+          name: string
+          verifier: string
+          typeOfLogin: string
+          clientId: string
+        }
       }
     }
   }>

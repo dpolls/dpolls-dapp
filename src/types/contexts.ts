@@ -115,11 +115,26 @@ export interface ConfigContextProps {
     }
     loginMethodsOrder: string[]
   }
+  loginConfig: {
+    google: {
+      name: string
+      verifier: string
+      typeOfLogin: string
+      clientId: string
+    }
+    facebook: {
+      name: string
+      verifier: string
+      typeOfLogin: string
+      clientId: string
+    }
+  }
   currentNetworkIndex: number
   switchNetwork: () => void
   chains: WalletConfig['chains']
   switchToNetwork: (index: number) => void
   hasWeb3AuthConfig: boolean
+  web3AuthNetwork: WEB3AUTH_NETWORK_TYPE
 }
 
 export interface ConfigProviderProps extends ProviderProps {

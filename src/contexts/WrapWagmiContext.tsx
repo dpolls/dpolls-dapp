@@ -5,6 +5,7 @@ import { defineChain } from 'viem'
 import { http, WagmiProvider } from 'wagmi'
 import { rainbowWeb3AuthConnector } from '@/config/rainbowWeb3authConnector'
 import { ConfigContext } from '@/contexts'
+import { WEB3AUTH_NETWORK, WEB3AUTH_NETWORK_TYPE } from '@web3auth/base'
 
 interface WrapWagmiContextProps {
   entryPoint?: string
@@ -38,6 +39,7 @@ export const WrapWagmiProvider: React.FC<WrapWagmiContextProps> = ({ children })
     loginConfig,
     clientId,
     walletBackground,
+    web3AuthNetwork,
   } = config
 
   const neroChain = defineChain({
@@ -69,7 +71,7 @@ export const WrapWagmiProvider: React.FC<WrapWagmiContextProps> = ({ children })
     chain: neroChain,
     walletConfig: {
       name: walletName,
-      networkType: networkType,
+      networkType: web3AuthNetwork,
       logo: walletLogo,
       walletBackground,
       clientId,
@@ -78,6 +80,7 @@ export const WrapWagmiProvider: React.FC<WrapWagmiContextProps> = ({ children })
         uxMode: 'redirect',
         modalZIndex: '2147483647',
       },
+      loginConfig
     },
   })
 
