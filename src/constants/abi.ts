@@ -27,6 +27,14 @@ export const POLLS_DAPP_ABI = [
   'function fundPoll(uint256 pollId) external payable',
   'function fundPollWithToken(uint256 pollId, uint256 amount) external',
   'function claimReward(uint256 pollId) external payable',
+  'function claimRemainingFunds(uint256 pollId) external payable',
+  
+  // Community Fund and Donation Management
+  'function donateReward(uint256 pollId) external payable',
+  'function donateRemainingFunds(uint256 pollId) external payable',
+  'function getCommunityFundBalance(address token) view returns (uint256)',
+  'function getDonorTotalByToken(address donor, address token) view returns (uint256)',
+  'function getDonorHistory(address donor) view returns (tuple(address token, uint256 amount, uint256 timestamp, string donationType, uint256 pollId)[])',
   
   // View Functions
   'function getOptions(uint256 pollId) view returns (string[])',
@@ -42,7 +50,11 @@ export const POLLS_DAPP_ABI = [
   'event PollCreated(uint256 pollId, address creator, string subject)',
   'event PollUpdated(uint256 pollId, address creator, string sub)',
   'event PollClosed(uint256 pollId)',
-  'event TargetFundUpdated(uint256 pollId, uint256 oldTarget, uint256 newTarget)'
+  'event TargetFundUpdated(uint256 pollId, uint256 oldTarget, uint256 newTarget)',
+  'event RewardDonated(uint256 pollId, address user, uint256 amount)',
+  'event RemainingFundsDonated(uint256 pollId, uint256 amount)',
+  'event RemainingFundsClaimed(uint256 pollId, address creator, uint256 amount)',
+  'event DonationRecorded(address donor, address token, uint256 amount, string donationType, uint256 pollId)'
 ]
 
 export const ERC721_ABI = [
