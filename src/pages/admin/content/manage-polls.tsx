@@ -99,6 +99,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
   const [isLoading, setIsLoading] = useState(false);
   const isClaimed = poll.responsesWithAddress?.some(response => response.address === AAaddress && response.isClaimed);
   const [isForClaimingModalOpen, setIsForClaimingModalOpen] = useState(false);
+  const [isCancelPollModalOpen, setIsCancelPollModalOpen] = useState(false);
   const [votedOption, setVotedOption] = useState<string | null>(null);
 
   const [form] = Form.useForm();
@@ -327,6 +328,45 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     }
   };
 
+  const handleCancelPoll = async (poll: PollState) => {
+    if (!isConnected) {
+      alert('Please connect your wallet first');
+      return;
+    }
+    setIsLoading(true);
+    setUserOpHash(null);
+    setTxStatus('');
+
+    try {
+      await execute({
+        function: 'cancelPoll',
+        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        abi: POLLS_DAPP_ABI,
+        params: [
+          poll.id,
+        ],
+        value: 0,
+      });
+
+      const result = await waitForUserOpResult();
+      setUserOpHash(result.userOpHash);
+      setIsPolling(true);
+
+      if (result.result === true) {
+        setIsPolling(false);
+        fetchPolls();
+      } else if (result.transactionHash) {
+        setTxStatus('Transaction hash: ' + result.transactionHash);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setTxStatus('An error occurred');
+    } finally {
+      setIsLoading(false);
+      setIsCancelPollModalOpen(false);
+    }
+  };
+
   const handlePollStatusChange = async (poll: PollState, method: string) => {
     if (!isConnected) {
       alert('Please connect your wallet first');
@@ -509,6 +549,13 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
                   Open For Funding
               </Button>
             }
+            {poll.isOpen &&
+              <Button block variant="outlined" size="small" type="default"
+                onClick={() => setIsCancelPollModalOpen(true)}
+                style={{ color: '#ff4d4f', borderColor: '#ff4d4f' }}>
+                  Cancel Poll
+              </Button>
+            }
             {poll.status === "for-funding" && type === "created" &&
               <Button block variant="outlined" size="small" type="primary" 
                 onClick={() => setIsOpenPollModalOpen(true)}
@@ -525,7 +572,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
                   For Rewards Claim
               </Button>
             }
-            {type === "created" && poll.status === "for-claiming" && 
+            {type === "created" && poll.status === "for-claiming" &&
               <>
                 <Button
                   block variant="outlined" size="small"
@@ -752,6 +799,29 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
           </Form.Item>
         </Form>
       </Modal>
+      <Modal
+        title={"Cancel Poll: " + poll.subject}
+        open={isCancelPollModalOpen}
+        maskClosable={false}
+        onCancel={() => setIsCancelPollModalOpen(false)}
+        footer={[
+          <Button key="submit" type="primary" loading={isLoading}
+            onClick={async () => {
+              await handleCancelPoll(poll);
+              setIsCancelPollModalOpen(false);
+            }}
+            style={{ backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }}>
+            Yes, Cancel Poll
+          </Button>,
+          <Button key="back" variant="outlined" loading={isLoading} onClick={() => {
+            setIsCancelPollModalOpen(false);
+          }}>
+            No, Keep Poll
+          </Button>,
+        ]}
+      >
+        <p>Are you sure you want to cancel this poll? This action cannot be undone.</p>
+      </Modal>
       <VotePollModal
         featureFlagNew={true} 
         poll={selectedPoll} isOpen={isPollModalOpen} onClose={closePollModal}
@@ -762,17 +832,13 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 }
 
 interface StatusBadgeProps {
-  poll: {
-    status: string;
-    funds: number;
-    targetFund: number;
-  };
+  poll: PollState;
 }
 
 function StatusBadge({ poll }: StatusBadgeProps) {
   const { status } = poll;
 
-  const funds = parseFloat(ethers.utils.formatEther(poll.funds || '0'));
+  const funds = parseFloat(ethers.utils.formatEther(poll.funds?.toString() || '0'));
   const targetFund = parseFloat(ethers.utils.formatEther(poll.targetFund || '0'));
   const isTargetReached = funds >= targetFund;
 

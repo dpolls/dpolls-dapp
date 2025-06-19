@@ -12,9 +12,10 @@ import { getCompressedAddress } from "@/utils/addressUtil";
 import { computePercentage } from "@/utils/mathUtils";
 import { Button, Form, Input, Modal, Result } from 'antd';
 import { ethers } from 'ethers';
-import { CircleDollarSign, Clock, Users } from "lucide-react";
-import { useState } from "react";
-import { handleClaimRewards } from '@/utils/pollUtils';
+import { CircleDollarSign, Clock, Users, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { handleClaimRemainingFunds, handleDonateRemainingFunds } from '@/utils/pollUtils';
+import ReactConfetti from 'react-confetti';
 
 interface CompletedPollsProps {
   AAaddress: string
@@ -29,7 +30,7 @@ export default function CompletedPolls({ AAaddress, polls, fetchPolls, handleTab
 
   const { isConnected } = useSignature();
   // Filter polls based on their status
-  const targetPolls = polls.filter(poll => poll.status === "closed")
+  const targetPolls = polls.filter(poll => poll.status === "closed" || poll.status === "cancelled")
   console.log('target poll', targetPolls)
 
   return (
@@ -71,8 +72,8 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
   { poll: PollState, type: string, fetchPolls: () => void, AAaddress: string }) {
 
   console.log('poll', poll)
-  const isClaimed = poll.responsesWithAddress?.some(response => response.address === AAaddress && response.isClaimed);
-  console.log('isClaimed', isClaimed)
+  const isCreator = poll.creator.toLowerCase() === AAaddress.toLowerCase();
+  console.log('isCreator', isCreator)
 
   const { isConnected, } = useSignature();
   const { execute, waitForUserOpResult } = useSendUserOp();
@@ -81,10 +82,30 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
   const [isPolling, setIsPolling] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [isThankYouModalOpen, setIsThankYouModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDonateLoading, setIsDonateLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
 
-  const onClaimRewards = () => {
-    handleClaimRewards(
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const onClaimRemainingFunds = () => {
+    handleClaimRemainingFunds(
       poll,
       isConnected,
       execute,
@@ -95,6 +116,26 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setIsPolling,
       setIsLoading,
       setIsModalOpen
+    );
+  };
+
+  const onDonateRemainingFunds = () => {
+    handleDonateRemainingFunds(
+      poll,
+      isConnected,
+      execute,
+      waitForUserOpResult,
+      fetchPolls,
+      setUserOpHash,
+      setTxStatus,
+      setIsPolling,
+      setIsDonateLoading,
+      setIsDonateModalOpen,
+      () => {
+        setIsThankYouModalOpen(true);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
     );
   };
 
@@ -152,22 +193,39 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
           </Avatar>
           <span className="text-xs text-muted-foreground">{getCompressedAddress(poll.creator)}</span>
         </div>
-        <div className="flex">
-          <Button block variant="outlined" size="small" type="primary"
-            disabled={isClaimed}
+        <div className="flex gap-2">
+          <Button 
+            block 
+            variant="outlined" 
+            size="small" 
+            type="primary"
+            disabled={!isCreator || funds === 0}
             onClick={() => setIsModalOpen(true)}>
-            {isClaimed ? 'Already Claimed' : 'Claim'}
+            {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
           </Button>
+          {isCreator && funds > 0 && (
+            <Button 
+              block 
+              variant="outlined" 
+              size="small" 
+              type="primary"
+              onClick={() => setIsDonateModalOpen(true)}
+              icon={<Heart className="h-3 w-3" />}>
+              Donate
+            </Button>
+          )}
         </div>
       </CardFooter>
+      
+      {/* Refund Modal */}
       <Modal
-        title={"Claim Rewards for poll: " + poll.subject}
+        title={"Claim Remaining Funds for poll: " + poll.subject}
         open={isModalOpen}
         maskClosable={false}
         onCancel={() => setIsModalOpen(false)}
         footer={[
           <Button key="submit" type="primary" loading={isLoading}
-            onClick={onClaimRewards}>
+            onClick={onClaimRemainingFunds}>
             Yes
           </Button>,
           <Button key="back" variant="outlined" loading={isLoading} onClick={() => {
@@ -177,6 +235,77 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
           </Button>,
         ]}
       >
+        <p>Are you sure you want to claim the remaining funds ({funds} NERO) for this poll?</p>
+      </Modal>
+
+      {/* Donate Modal */}
+      <Modal
+        title={"Donate Remaining Funds to Community Fund for poll: " + poll.subject}
+        open={isDonateModalOpen}
+        maskClosable={false}
+        onCancel={() => setIsDonateModalOpen(false)}
+        footer={[
+          <Button key="submit" type="primary" loading={isDonateLoading}
+            onClick={onDonateRemainingFunds}
+            icon={<Heart className="h-4 w-4" />}>
+            Yes, Donate
+          </Button>,
+          <Button key="back" variant="outlined" loading={isDonateLoading} onClick={() => {
+            setIsDonateModalOpen(false);
+          }}>
+            No
+          </Button>,
+        ]}
+      >
+        <div className="text-center py-4">
+          <Heart className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium mb-2">Donate Your Remaining Funds</p>
+          <p className="text-muted-foreground">
+            Instead of claiming your remaining funds, you can donate them to the community fund. 
+            This helps support future polls and the overall ecosystem.
+          </p>
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <p className="text-blue-600 dark:text-blue-400 font-medium">
+              Amount to donate: {funds} NERO
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Thank You Modal */}
+      <Modal
+        title="Thank You for Your Donation!"
+        open={isThankYouModalOpen}
+        maskClosable={true}
+        onCancel={() => setIsThankYouModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setIsThankYouModalOpen(false)}>
+            Close
+          </Button>,
+        ]}
+      >
+        <div className="text-center py-4">
+          {showConfetti && (
+            <ReactConfetti
+              width={windowSize.width}
+              height={windowSize.height}
+              recycle={false}
+              numberOfPieces={200}
+              gravity={0.3}
+            />
+          )}
+          <Heart className="h-16 w-16 text-red-500 mx-auto mb-4 animate-bounce" />
+          <p className="text-xl font-medium mb-4">Thank You for Your Generosity!</p>
+          <p className="text-muted-foreground mb-4">
+            Your donation to the community fund will help support future polls and strengthen our ecosystem.
+            Together, we're building a better community!
+          </p>
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+            <p className="text-green-600 dark:text-green-400 font-medium">
+              Successfully donated remaining funds from poll: {poll.subject}
+            </p>
+          </div>
+        </div>
       </Modal>
     </Card>
   )

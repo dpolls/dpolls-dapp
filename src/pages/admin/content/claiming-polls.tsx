@@ -4,8 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v2/avatar";
 import { Badge } from "@/components/ui_v2/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v2/card";
 import { WalletConnector } from "@/components/wallet/wallet-connector";
-import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useSendUserOp, useSignature } from '@/hooks';
 import { PollState } from "@/types/poll";
 import { getCompressedAddress } from "@/utils/addressUtil";
@@ -13,9 +11,10 @@ import { computePercentage } from "@/utils/mathUtils";
 import { calculateTimeLeft } from "@/utils/timeUtils";
 import { Button, Form, Input, Modal, Result } from 'antd';
 import { ethers } from 'ethers';
-import { CircleDollarSign, Clock, Users } from "lucide-react";
-import { useState } from "react";
-import { handleClaimRewards } from '@/utils/pollUtils';
+import { CircleDollarSign, Clock, Users, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { handleClaimRewards, handleDonateRewards } from '@/utils/pollUtils';
+import ReactConfetti from 'react-confetti';
 
 interface ClaimingPollsProps {
   AAaddress: string
@@ -81,7 +80,27 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
   const [isPolling, setIsPolling] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+  const [isThankYouModalOpen, setIsThankYouModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDonateLoading, setIsDonateLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const onClaimRewards = () => {
     handleClaimRewards(
@@ -95,6 +114,26 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setIsPolling,
       setIsLoading,
       setIsModalOpen
+    );
+  };
+
+  const onDonateRewards = () => {
+    handleDonateRewards(
+      poll,
+      isConnected,
+      execute,
+      waitForUserOpResult,
+      fetchPolls,
+      setUserOpHash,
+      setTxStatus,
+      setIsPolling,
+      setIsDonateLoading,
+      setIsDonateModalOpen,
+      () => {
+        setIsThankYouModalOpen(true);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      }
     );
   };
 
@@ -155,14 +194,32 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
           </Avatar>
           <span className="text-xs text-muted-foreground">{getCompressedAddress(poll.creator)}</span>
         </div>
-        <div className="flex">
-          <Button block variant="outlined" size="small" type="primary"
+        <div className="flex gap-2">
+          <Button 
+            block 
+            variant="outlined" 
+            size="small" 
+            type="primary"
             disabled={isClaimed || !hasVoted}
             onClick={() => setIsModalOpen(true)}>
             {isClaimed ? 'Already Claimed' : 'Claim'}
           </Button>
+          {!isClaimed && (
+            <Button 
+              block 
+              variant="outlined" 
+              size="small" 
+              type="primary"
+              disabled={isClaimed || !hasVoted}
+              onClick={() => setIsDonateModalOpen(true)}
+              icon={<Heart className="h-3 w-3" />}>
+              Donate
+            </Button>
+          )}
         </div>
       </CardFooter>
+      
+      {/* Claim Modal */}
       <Modal
         title={"Claim Rewards for poll: " + poll.subject}
         open={isModalOpen}
@@ -181,11 +238,76 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
         ]}
       >
       </Modal>
+
+      {/* Donate Modal */}
+      <Modal
+        title={"Donate Rewards to Community Fund for poll: " + poll.subject}
+        open={isDonateModalOpen}
+        maskClosable={false}
+        onCancel={() => setIsDonateModalOpen(false)}
+        footer={[
+          <Button key="submit" type="primary" loading={isDonateLoading}
+            onClick={onDonateRewards}
+            icon={<Heart className="h-4 w-4" />}>
+            Yes, Donate
+          </Button>,
+          <Button key="back" variant="outlined" loading={isDonateLoading} onClick={() => {
+            setIsDonateModalOpen(false);
+          }}>
+            No
+          </Button>,
+        ]}
+      >
+        <div className="text-center py-4">
+          <Heart className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-lg font-medium mb-2">Donate Your Rewards</p>
+          <p className="text-muted-foreground">
+            Instead of claiming your rewards, you can donate them to the community fund. 
+            This helps support future polls and the overall ecosystem.
+          </p>
+        </div>
+      </Modal>
+
+      {/* Thank You Modal */}
+      <Modal
+        title="Thank You for Your Donation!"
+        open={isThankYouModalOpen}
+        maskClosable={true}
+        onCancel={() => setIsThankYouModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setIsThankYouModalOpen(false)}>
+            Close
+          </Button>,
+        ]}
+      >
+        <div className="text-center py-4">
+          {showConfetti && (
+            <ReactConfetti
+              width={windowSize.width}
+              height={windowSize.height}
+              recycle={false}
+              numberOfPieces={200}
+              gravity={0.3}
+            />
+          )}
+          <Heart className="h-16 w-16 text-red-500 mx-auto mb-4 animate-bounce" />
+          <p className="text-xl font-medium mb-4">Thank You for Your Generosity!</p>
+          <p className="text-muted-foreground mb-4">
+            Your donation to the community fund will help support future polls and strengthen our ecosystem.
+            Together, we're building a better community!
+          </p>
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+            <p className="text-green-600 dark:text-green-400 font-medium">
+              Successfully donated rewards from poll: {poll.subject}
+            </p>
+          </div>
+        </div>
+      </Modal>
     </Card>
   )
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status }: { status: string }) {
   if (status === "active" || status === "open") {
     return (
       <Badge variant="default" className="bg-green-500">
@@ -213,4 +335,5 @@ function StatusBadge({ status }) {
       </Badge>
     )
   }
+  return null;
 }
