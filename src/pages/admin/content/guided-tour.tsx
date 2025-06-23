@@ -84,14 +84,14 @@ const tourSteps: TourStep[] = [
     position: "right",
     action: "Select a poll to manage funding",
   },
-  {
-    id: "leaderboard-nav",
-    title: "See Your Standing",
-    description: "Access the leaderboard to see where you stand in the global, monthly, and weekly standing for extra rewards.",
-    target: "leaderboard-nav",
-    position: "right",
-    action: "Click to view leaderboard",
-  },
+  // {
+  //   id: "leaderboard-nav",
+  //   title: "See Your Standing",
+  //   description: "Access the leaderboard to see where you stand in the global, monthly, and weekly standing for extra rewards.",
+  //   target: "leaderboard-nav",
+  //   position: "right",
+  //   action: "Click to view leaderboard",
+  // },
   {
     id: "complete",
     title: "Tour Complete!",
