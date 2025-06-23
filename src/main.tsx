@@ -9,6 +9,7 @@ import LandingPage from '@/pages/landing/page'
 import PollAdminPage from '@/pages/admin/page'
 import CreatePollPage from '@/pages/landing/polls/new/page'
 import LivePollsPage from '@/pages/landing/polls/live/page'
+import { FloatingChatButton } from '@/components/ui_v3/floating-chat-button'
 
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/polls/new" element={<CreatePollPage />} />
           <Route path="/polls/live" element={<LivePollsPage />} />
         </Routes>
+        <FloatingChatButton />
       </SocialWallet>
     </BrowserRouter>
   </ConfigProvider>,
