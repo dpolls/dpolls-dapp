@@ -12,7 +12,7 @@ import PollStep1 from "@/components/poll-steps/new-poll-step1";
 import PollStep2 from "@/components/poll-steps/new-poll-step2";
 import PollStep3 from "@/components/poll-steps/new-poll-step3";
 import { PollState } from '@/types/poll';
-import { handleCreatePoll } from '@/utils/poll';
+import { handleCreatePoll } from '@/utils/pollCrudUtil';
 
 const STEPS = [
   { id: 1, title: "Content", description: "Question, description & duration" },

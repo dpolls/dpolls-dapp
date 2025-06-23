@@ -176,8 +176,6 @@ let featuredPolls: any[] = [
 ]
 
 export default function LandingPage() {
-  const { AAaddress, isConnected } = useSignature();
-
   const config = useConfig(); // Get config to access RPC URL
   const [isLoading, setIsLoading] = useState(false);
   const [txStatus, setTxStatus] = useState<string>('');
