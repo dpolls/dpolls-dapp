@@ -1,3 +1,5 @@
+import dpollsConfig from '@/../dpolls.config'
+
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
   paymaster: "0x5a6680dFd4a77FEea0A7be291147768EaA2414ad",
@@ -6,7 +8,7 @@ export const CONTRACT_ADDRESSES = {
   multiCall: "0x343A0DdD8e58bEaf29d69936c82F1516C6677B0E",
   // This would be your deployed NFT contract address
   nftContract: "0x63f1f7c6a24294a874d7c8ea289e4624f84b48cb",
-  dpollsContract: "0x37D75d82EC55e623ad4a996f0Fd2d261ce855E9F",
+  dpollsContract: dpollsConfig.dpollsContractAddress,
   testTokenContract: "0xA919e465871871F2D1da94BccAF3acaF9609D968" // TestToken contract address
 };
 
