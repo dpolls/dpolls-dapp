@@ -9,6 +9,7 @@ import { X, Send, Bot, Loader2, Sparkles, RefreshCw, PlusCircle } from "lucide-r
 import { useSendUserOp, useSignature } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
 import { handleCreatePoll } from '@/utils/pollCrudUtil';
+import dpollsConfig from '@/../dpolls.config';
 
 interface AIChatModalProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
 
   const generatePollPreview = async (prompt: string) => {
     try {
-      const response = await fetch('/api/poll-ai', {
+      const response = await fetch(`${dpollsConfig.api}/api/poll-ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
@@ -97,7 +98,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Regenerating with feedback: "${feedback}"`, isUser: true, timestamp: new Date() }]);
 
     try {
-      const response = await fetch('/api/poll-ai-regen', {
+      const response = await fetch(`${dpollsConfig.api}/api/poll-ai-regen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'regenerate', pollData: currentPoll, feedback }),
