@@ -61,13 +61,6 @@ export default defineConfig(({ mode }) => {
       fs: {
         strict: false,
         allow: ['..']
-      },
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-          secure: false,
-        }
       }
     },
     build: {
