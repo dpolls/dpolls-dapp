@@ -1,3 +1,8 @@
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Legend as ChartLegend, Tooltip as ChartTooltip, BarController,
+  LineController,
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartLegend, ChartTooltip, BarController, LineController);
 
 import { SendUserOpContext } from '@/contexts';
 import { useContext, useEffect, useState } from "react";
@@ -10,18 +15,19 @@ import LeaderboardPage from '@/pages/leaderboard/page';
 import CreatePoll from "@/pages/simple/create-poll";
 import CompletedPolls from './completed-polls';
 
-
 import { Button } from "@/components/ui_v3/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui_v3/card";
-import { Progress } from "@/components/ui_v3/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui_v3/tabs";
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useConfig, useSignature } from '@/hooks';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
 import { ethers } from 'ethers';
-import { BarChart, Dice5, LineChart, Mail, PieChart, Trophy } from "lucide-react";
+import { Dice5, Mail, Trophy } from "lucide-react";
+import { Chart } from 'react-chartjs-2';
+import { useToast } from '@/components/ui_v3/use-toast';
+import { PieChart as RePieChart, Pie, Cell, Tooltip } from 'recharts';
+import type { ChartData, ChartOptions } from 'chart.js';
 
 interface DashboardContentProps {
   activeTab: string
@@ -29,10 +35,10 @@ interface DashboardContentProps {
 }
 
 export default function DashboardContent({ activeTab, setActiveTab }: DashboardContentProps) {
-  const [activeDashboardTab, setActiveDashboardTab] = useState('active');
   const { AAaddress, isConnected, simpleAccountInstance } = useSignature();
 
   const config = useConfig(); // Get config to access RPC URL
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [txStatus, setTxStatus] = useState<string>('');
   const [polls, setPolls] = useState<any[]>([]);
@@ -55,15 +61,24 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
   const fetchPolls = async () => {
     if (!isConnected || !AAaddress) return;
 
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       
       // Create a provider using the RPC URL from config
-      const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc);
       
       // Create a contract instance for the NFT contract
       const pollsContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.dpollsContract,
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         POLLS_DAPP_ABI,
         provider
       );
@@ -200,144 +215,408 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
     return <LeaderboardPage AAaddress={AAaddress} polls={polls} fetchPolls={fetchPolls} />
     //return <LeaderboardContent />
   } else {
-    return <OverviewContent />
+    return <DashboardWithRoleSwitch polls={polls} />
   }
 }
 
-function OverviewContent() {
+interface DashboardWithRoleSwitchProps {
+  polls: any[];
+}
+function DashboardWithRoleSwitch({ polls }: DashboardWithRoleSwitchProps) {
+  const [role, setRole] = useState<'creator' | 'responder'>('creator');
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+      <h2 className="text-2xl font-bold">Dashboard for {role === 'creator' ? 'Creator' : 'Responder'}</h2>
+      <div className="flex gap-2 mb-4 justify-center">
+        <Button
+          variant={role === 'creator' ? 'default' : 'outline'}
+          onClick={() => setRole('creator')}
+          className={`w-24 ${role === 'creator' ? 'text-white' : ''}`}
+        >
+          Creator
+        </Button>
+        <Button
+          variant={role === 'responder' ? 'default' : 'outline'}
+          onClick={() => setRole('responder')}
+          className={`w-24 ${role === 'responder' ? 'text-white' : ''}`}
+        >
+          Responder
+        </Button>
+      </div>
+      {role === 'creator' ? <PollCreatorDashboard polls={polls} /> : <PollResponderDashboard />}
+    </div>
+  );
+}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+interface PollCreatorDashboardProps {
+  polls: any[];
+}
+function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
+  // Compute summary
+  const totalPolls = polls.length;
+  const totalResponses = polls.reduce((sum, poll) => sum + (poll.totalResponses || 0), 0);
+  const activePolls = polls.filter(poll => poll.isOpen).length;
+  // Safely sum BigNumbers for totalEarned
+  let totalEarnedBN = polls.reduce((sum, poll) => {
+    try {
+      return sum.add(poll.funds ? ethers.BigNumber.from(poll.funds) : ethers.BigNumber.from(0));
+    } catch {
+      return sum;
+    }
+  }, ethers.BigNumber.from(0));
+  const totalEarned = ethers.utils.formatEther(totalEarnedBN);
+  // Responses Overview
+  const responsesOverview = [
+    { label: 'Open', value: polls.filter(p => p.status?.toLowerCase() === 'open').length },
+    { label: 'Closed', value: polls.filter(p => p.status?.toLowerCase() === 'closed').length },
+    { label: 'New', value: polls.filter(p => p.status?.toLowerCase() === 'new').length },
+  ];
+  // My Polls Table
+  const myPolls = polls.map(poll => ({
+    title: poll.subject,
+    status: poll.status,
+    responses: poll.totalResponses,
+    reward: poll.rewardPerResponse ? `${ethers.utils.formatEther(poll.rewardPerResponse)} ETH` : '—',
+  }));
+
+  // Pie chart colors
+  const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
+
+  // Select dummy data based on timeUnit
+  const [timeUnit, setTimeUnit] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  // Dummy data for each time unit
+  const dummyDaily = [
+    { date: '2024-06-01', responses: 2, trend: 2 },
+    { date: '2024-06-02', responses: 4, trend: 6 },
+    { date: '2024-06-03', responses: 3, trend: 9 },
+    { date: '2024-06-04', responses: 5, trend: 14 },
+    { date: '2024-06-05', responses: 6, trend: 20 },
+    { date: '2024-06-06', responses: 7, trend: 27 },
+    { date: '2024-06-07', responses: 8, trend: 35 },
+  ];
+  const dummyWeekly = [
+    { date: '2024-W22', responses: 10, trend: 10 },
+    { date: '2024-W23', responses: 15, trend: 25 },
+    { date: '2024-W24', responses: 20, trend: 45 },
+    { date: '2024-W25', responses: 12, trend: 57 },
+  ];
+  const dummyMonthly = [
+    { date: '2024-01', responses: 30, trend: 30 },
+    { date: '2024-02', responses: 40, trend: 70 },
+    { date: '2024-03', responses: 50, trend: 120 },
+    { date: '2024-04', responses: 60, trend: 180 },
+    { date: '2024-05', responses: 70, trend: 250 },
+    { date: '2024-06', responses: 80, trend: 330 },
+  ];
+
+  // Real data processing (retained for future use)
+  const responsesByDate: Record<string, number> = {};
+  polls.forEach(poll => {
+    if (poll.createdAt) {
+      const date = new Date(poll.createdAt).toISOString().slice(0, 10); // YYYY-MM-DD
+      responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses || 0);
+    }
+  });
+  const responsesOverTime = Object.entries(responsesByDate)
+    .map(([date, responses]) => ({ date, responses }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let cumulative = 0;
+  const responsesWithTrend = responsesOverTime.map(item => {
+    cumulative += item.responses;
+    return { ...item, trend: cumulative };
+  });
+
+  // Select dummy data based on timeUnit
+  let chartSource = dummyDaily;
+  if (timeUnit === 'weekly') chartSource = dummyWeekly;
+  if (timeUnit === 'monthly') chartSource = dummyMonthly;
+
+  // Chart.js data for Responses Over Time
+  const chartData: ChartData<'bar'> = {
+    labels: chartSource.map(d => d.date),
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Responses',
+        data: chartSource.map(d => d.responses),
+        backgroundColor: '#0088FE',
+        yAxisID: 'y',
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: 'Cumulative',
+        data: chartSource.map(d => d.trend),
+        borderColor: '#FFBB28',
+        backgroundColor: '#FFBB28',
+        yAxisID: 'y1',
+        tension: 0.4,
+        fill: false,
+        order: 1,
+      },
+    ] as any, // allow mixed bar/line types
+  };
+  const chartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' as const },
+      tooltip: { mode: 'index' as const, intersect: false },
+    },
+    scales: {
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        beginAtZero: true,
+        title: { display: true, text: 'Responses' },
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        beginAtZero: true,
+        grid: { drawOnChartArea: false },
+        title: { display: true, text: 'Cumulative' },
+      },
+    },
+  };
+
+  return (
+    <div className="grid gap-4">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Polls</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-muted-foreground">+2 from last week</p>
+            <div className="text-2xl font-bold">{totalPolls}</div>
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Polls</CardTitle>
-            <PieChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">7</div>
-            <p className="text-xs text-muted-foreground">+1 from last week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Responses</CardTitle>
-            <LineChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,284</div>
-            <p className="text-xs text-muted-foreground">+342 from last week</p>
+            <div className="text-2xl font-bold">{totalResponses.toLocaleString()}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Polls</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activePolls}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{Number(totalEarned).toFixed(2)} ETH</div>
           </CardContent>
         </Card>
       </div>
-
+      {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Recent Polls</CardTitle>
-            <CardDescription>Your most recently created polls</CardDescription>
+            <CardTitle>Responses Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Game Night Preferences", responses: 42, completion: 65 },
-                { name: "Team Building Activities", responses: 28, completion: 40 },
-                { name: "Office Lunch Options", responses: 56, completion: 80 },
-                { name: "Remote Work Survey", responses: 19, completion: 25 },
-              ].map((poll, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{poll.name}</p>
-                    <p className="text-xs text-muted-foreground">{poll.responses} responses</p>
-                  </div>
-                  <div className="w-1/3">
-                    <Progress value={poll.completion} className="h-2" />
-                  </div>
-                </div>
-              ))}
+            {/* Pie chart using Recharts */}
+            <div className="flex flex-row items-center justify-center h-80">
+              <RePieChart width={400} height={320}>
+                <Pie
+                  data={responsesOverview}
+                  dataKey="value"
+                  nameKey="label"
+                  cx={200}
+                  cy={160}
+                  outerRadius={100}
+                  label={({ name, value }) => `${name} (${value})`}
+                >
+                  {responsesOverview.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </RePieChart>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
-            <CardTitle>Poll Performance</CardTitle>
-            <CardDescription>Response rates for active polls</CardDescription>
+            <CardTitle>Responses Over Time</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px] flex items-center justify-center text-muted-foreground text-sm">
-              Chart visualization would go here
+            <div className="flex justify-end mb-2">
+              <select
+                value={timeUnit}
+                onChange={e => setTimeUnit(e.target.value as 'daily' | 'weekly' | 'monthly')}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="daily">Daily (max 7 days)</option>
+                <option value="weekly">Weekly (max 4 weeks)</option>
+                <option value="monthly">Monthly (max 6 months)</option>
+              </select>
+            </div>
+            {/* Chart.js bar + line chart */}
+            <div className="flex items-center justify-center h-80">
+              <Chart type='bar' data={chartData} options={chartOptions} />
             </div>
           </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
-
-function CreatePollContent() {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Create New Poll</h2>
-
+      {/* My Polls Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Poll Details</CardTitle>
-          <CardDescription>Enter the basic information for your new poll</CardDescription>
+          <CardTitle>My Polls</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="title" className="text-sm font-medium">
-                Poll Title
-              </label>
-              <input id="title" className="w-full p-2 rounded-md border" placeholder="Enter poll title" />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Description
-              </label>
-              <textarea
-                id="description"
-                className="w-full p-2 rounded-md border min-h-[100px]"
-                placeholder="Enter poll description"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Poll Type</label>
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <input type="radio" id="single" name="pollType" />
-                  <label htmlFor="single">Single Choice</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="radio" id="multiple" name="pollType" />
-                  <label htmlFor="multiple">Multiple Choice</label>
-                </div>
-              </div>
-            </div>
-
-            <Button>Continue to Questions</Button>
-          </form>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2">Poll Title</th>
+                  <th className="text-left py-2 px-2">Status</th>
+                  <th className="text-left py-2 px-2">Responses</th>
+                  <th className="text-left py-2 px-2">Reward</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myPolls.map((poll, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-2 px-2">{poll.title}</td>
+                    <td className="py-2 px-2">{poll.status}</td>
+                    <td className="py-2 px-2">{poll.responses}</td>
+                    <td className="py-2 px-2">{poll.reward}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
+}
+
+function PollResponderDashboard() {
+  // Dummy data for illustration
+  const summary = {
+    totalParticipated: 45,
+    totalRewards: 12,
+    activeAvailable: 3,
+  };
+  const recentPolls = [
+    { title: 'Poll Title', category: 'Category', date: 'Jun 10', reward: '0.01 ETH', status: 'Open' },
+    { title: 'Poll Title', category: 'Category', date: 'May 28', reward: '10 ERC20', status: 'Closed' },
+  ];
+  const activePolls = [
+    { title: 'Active Poll 1', category: 'Category A', endDate: 'Jun 20', reward: '0.02 ETH' },
+    { title: 'Active Poll 2', category: 'Category B', endDate: 'Jun 22', reward: '5 ERC20' },
+  ];
+
+  return (
+    <div className="grid gap-4">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Polls Participated</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalParticipated}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Rewards</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalRewards}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Polls Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.activeAvailable}</div>
+          </CardContent>
+        </Card>
+      </div>
+      {/* Recent Polls Voted Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Polls Voted</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2">Poll Title</th>
+                  <th className="text-left py-2 px-2">Category</th>
+                  <th className="text-left py-2 px-2">Date</th>
+                  <th className="text-left py-2 px-2">Reward</th>
+                  <th className="text-left py-2 px-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPolls.map((poll, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-2 px-2">{poll.title}</td>
+                    <td className="py-2 px-2">{poll.category}</td>
+                    <td className="py-2 px-2">{poll.date}</td>
+                    <td className="py-2 px-2">{poll.reward}</td>
+                    <td className="py-2 px-2">{poll.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Active Polls Available Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Polls Available</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2">Poll Title</th>
+                  <th className="text-left py-2 px-2">Category</th>
+                  <th className="text-left py-2 px-2">End Date</th>
+                  <th className="text-left py-2 px-2">Reward</th>
+                  <th className="text-left py-2 px-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activePolls.map((poll, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-2 px-2">{poll.title}</td>
+                    <td className="py-2 px-2">{poll.category}</td>
+                    <td className="py-2 px-2">{poll.endDate}</td>
+                    <td className="py-2 px-2">{poll.reward}</td>
+                    <td className="py-2 px-2">
+                      <Button size="sm" variant="outline">Vote</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function SettingsContent() {
