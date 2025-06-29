@@ -140,7 +140,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     return {
       id: index,
       text: option,
-      votes: poll.responses.length,
+      votes: poll.responses.filter((response: any) => response.option === index.toString()).length,
       percentage: computePercentage(poll.responses, index.toString())
     };
   });
