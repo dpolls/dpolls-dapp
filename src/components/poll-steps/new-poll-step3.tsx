@@ -108,8 +108,8 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
               onValueChange={(value) => updateFormData("rewardDistribution", value)}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="split" id="split" />
-                <Label htmlFor="split">Split total funds equally among all responders</Label>
+                <RadioGroupItem value="equal-share" id="equal-share" />
+                <Label htmlFor="equal-share">Split total funds equally among all responders</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="fixed" id="fixed" />
@@ -118,7 +118,7 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
             </RadioGroup>
           </div>
 
-          {formData.rewardDistribution === "split" ? (
+          {formData.rewardDistribution === "equal-share" ? (
             <div className="space-y-2">
               <Label htmlFor="target-fund">Target Fund Amount (NERO) *</Label>
               <Input

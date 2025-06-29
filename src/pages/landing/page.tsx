@@ -2,12 +2,10 @@
 
 import type React from "react";
 
-import { useConfig, useSignature } from '@/hooks';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useContext } from "react";
 import { Link } from 'react-router-dom';
 
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
 import { ethers } from 'ethers';
@@ -21,6 +19,8 @@ import { getRandomBoolean } from "@/utils/booleanUtils";
 import { getTagColor } from "@/utils/tagColors";
 import { Tag, Card as AntdCard, Avatar } from "antd";
 import { ArrowRight, Clock, Coins, Eye, Shield, Trophy, Users } from "lucide-react";
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 const TypewriterText = () => {
   const words = ["businesses", "surveys", "art contests", "debates"]
@@ -100,94 +100,16 @@ const AnimatedSection = ({ children, className = "" }: { children: React.ReactNo
   )
 }
 
-let featuredPolls: any[] = [
-  {
-    id: 1,
-    subject: "Best Logo Design Contest",
-    description: "Vote for the most creative logo design",
-    participants: 156,
-    timeLeft: "2 days",
-    prize: "0.5 ETH",
-    category: "Design",
-  },
-  {
-    id: 2,
-    subject: "Favorite Programming Language",
-    description: "What's your go-to programming language?",
-    participants: 342,
-    timeLeft: "5 days",
-    prize: "0.2 ETH",
-    category: "Tech",
-  },
-  {
-    id: 3,
-    subject: "Best Coffee Shop in NYC",
-    description: "Help us find the best coffee in the city",
-    participants: 89,
-    timeLeft: "1 day",
-    prize: "0.1 ETH",
-    category: "Lifestyle",
-  },
-  {
-    id: 4,
-    title: "Crypto Art Showcase",
-    description: "Vote for the most innovative crypto art",
-    participants: 234,
-    timeLeft: "3 days",
-    prize: "1.0 ETH",
-    category: "Art",
-  },
-  {
-    id: 5,
-    title: "Best DeFi Protocol",
-    description: "Which DeFi protocol do you trust most?",
-    participants: 567,
-    timeLeft: "4 days",
-    prize: "0.3 ETH",
-    category: "DeFi",
-  },
-  {
-    id: 6,
-    title: "Sustainable Energy Solutions",
-    description: "Vote for the most promising green tech",
-    participants: 123,
-    timeLeft: "6 days",
-    prize: "0.4 ETH",
-    category: "Environment",
-  },
-  {
-    id: 7,
-    title: "Best Mobile App UI",
-    description: "Which app has the best user interface?",
-    participants: 298,
-    timeLeft: "2 days",
-    prize: "0.25 ETH",
-    category: "Design",
-  },
-  {
-    id: 8,
-    title: "Future of Web3",
-    description: "What's the next big thing in Web3?",
-    participants: 445,
-    timeLeft: "7 days",
-    prize: "0.6 ETH",
-    category: "Web3",
-  },
-]
-
 export default function LandingPage() {
-  const config = useConfig(); // Get config to access RPC URL
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [txStatus, setTxStatus] = useState<string>('');
-  const [polls, setPolls] = useState<PollState[]>([]);
   const [email, setEmail] = useState("")
   const [selectedPoll, setSelectedPoll] = useState<any | null>(null)
   const [isPollModalOpen, setIsPollModalOpen] = useState(false)
   const [featureFlagNew, setFeatureFlagNew] = useState(true);
-
-  if (featureFlagNew) {
-    featuredPolls = polls.filter(poll => poll.isFeatured).slice(0, 8);
-  }
+  const [featuredPolls, setFeaturedPolls] = useState<PollState[]>([]);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -210,15 +132,24 @@ export default function LandingPage() {
   }, []); 
 
   const fetchPolls = async () => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       
       // Create a provider using the RPC URL from config
-      const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc);
       
       // Create a contract instance for the NFT contract
       const pollsContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.dpollsContract,
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         POLLS_DAPP_ABI,
         provider
       );
@@ -247,7 +178,7 @@ export default function LandingPage() {
               });
 
               // Format the poll data
-              return {
+              const result = {
                 id: pollId,
                 creator: pollDetails.creator,
                 subject: pollDetails.subject,
@@ -268,6 +199,8 @@ export default function LandingPage() {
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
+              console.log('poll mod data', result);
+              return result;
             } catch (error) {
               console.error(`Error fetching Poll #${pollId}:`, error);
               return null;
@@ -278,30 +211,32 @@ export default function LandingPage() {
         // Filter out any null values from failed fetches
         const validPolls = fetchedPolls.filter(poll => poll !== null)
           .filter(poll => poll.status === "open")
-          .filter(poll => calculateTimeLeft(poll.endDate) !== "Ended");
+          .filter(poll => calculateTimeLeft(poll.endDate) !== "Ended")
+          .filter(poll => poll.isFeatured);
         
         if (validPolls.length > 0) {
-          setPolls(validPolls);
+          setFeaturedPolls(validPolls);
           setTxStatus(`Found ${validPolls.length} Polls`);
         } else {
           setTxStatus('No valid polls found');
           // Show sample polls as fallback
-          setPolls([]);
+          setFeaturedPolls([]);
         }
       } else {
         setTxStatus('No polls found');
-        setPolls([]);
+        setFeaturedPolls([]);
       }
     } catch (error) {
       console.error('Error fetching polls:', error);
       setTxStatus('Error fetching polls');
       
       // Fallback to sample polls in case of error
-      setPolls([]);
+      setFeaturedPolls([]);
     } finally {
       setIsLoading(false);
     }
   };
+  console.log('featuredPolls', featuredPolls)
 
   return (
     <div className="min-h-screen bg-background pr-9">

@@ -22,6 +22,10 @@ export interface WalletConfig {
         symbol: string
       }
     }
+    dpolls: {
+      api: string
+      contractAddress: string
+    }
     aa: {
       bundler: string
       paymaster: string
@@ -34,7 +38,7 @@ export interface WalletConfig {
     }
     web3auth: {
       clientId: string
-      networkType: string
+      networkType: WEB3AUTH_NETWORK_TYPE
       uiConfig: {
         appName: string
         mode: string

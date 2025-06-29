@@ -12,9 +12,10 @@ import { calculateTimeLeft } from "@/utils/timeUtils";
 import { Button, Form, Input, Modal, Result } from 'antd';
 import { ethers } from 'ethers';
 import { CircleDollarSign, Clock, Users, Heart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { handleClaimRewards, handleDonateRewards } from '@/utils/pollUtils';
 import ReactConfetti from 'react-confetti';
+import { ConfigContext } from '@/contexts';
 
 interface ClaimingPollsProps {
   AAaddress: string
@@ -70,6 +71,7 @@ export default function ClaimingPolls({ AAaddress, polls, fetchPolls, handleTabC
 function PollCard({ poll, type, fetchPolls, AAaddress }:
   { poll: PollState, type: string, fetchPolls: () => void, AAaddress: string }) {
 
+  const config = useContext(ConfigContext);
   const isClaimed = poll.responsesWithAddress?.some(response => response.address === AAaddress && response.isClaimed);
   const hasVoted = poll.responsesWithAddress?.some(response => response.address === AAaddress);
 
@@ -113,7 +115,8 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setTxStatus,
       setIsPolling,
       setIsLoading,
-      setIsModalOpen
+      setIsModalOpen,
+      config?.chains[config?.currentNetworkIndex].dpolls.contractAddress
     );
   };
 
@@ -129,6 +132,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setIsPolling,
       setIsDonateLoading,
       setIsDonateModalOpen,
+      config?.chains[config?.currentNetworkIndex].dpolls.contractAddress ?? '',
       () => {
         setIsThankYouModalOpen(true);
         setShowConfetti(true);

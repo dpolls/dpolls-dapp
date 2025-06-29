@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { useSignature, useSendUserOp, useConfig, useEthersSigner } from '@/hooks';
 import { POLLS_DAPP_ABI,  } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v2/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui_v2/tabs"
 import { Badge } from "@/components/ui_v2/badge"
@@ -17,6 +16,8 @@ import { getSigner, fundPoll } from '@/utils/aaUtils';
 import { calculateTimeLeft } from "@/utils/timeUtils";
 import { computePercentage } from "@/utils/mathUtils";
 import { handleClaimRewards } from '@/utils/pollUtils';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 const NERO_POLL_ABI = [
   // Basic ERC721 functions from the standard ABI
@@ -45,7 +46,7 @@ export default function Dashboard({ AAaddress, handleTabChange, polls, fetchPoll
 
     // Get signer from browser wallet
     const signer = await getSigner();
-    const result = await fundPoll(signer, poll.id, ethAmount);
+    const result = await fundPoll(signer, poll.id, ethAmount, config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress);
     console.log('result', result)
   }
 
@@ -154,6 +155,8 @@ export default function Dashboard({ AAaddress, handleTabChange, polls, fetchPoll
 function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFundPoll }: 
   { poll: any, type: string, fetchPolls: () => void, handleTabChange?: (tab: string) => void, AAaddress?: string, handleFundPoll?: (poll: any, amount: any) => void, }) {
   
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const { isConnected, } = useSignature();
   const { execute, waitForUserOpResult, sendUserOp } = useSendUserOp();
   const [userOpHash, setUserOpHash] = useState<string | null>(null);
@@ -176,9 +179,22 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const [form] = Form.useForm();
 
-  const handleOptionVote = async (option) => {
+  const handleOptionVote = async (option: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -189,7 +205,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -220,7 +236,20 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const handleUpdatePoll = async (updatedPoll: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -231,7 +260,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'updatePoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           updatedPoll.id,
@@ -252,6 +281,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
       if (result.result === true) {
         setIsPolling(false);
+        fetchPolls();
       } else if (result.transactionHash) {
         setTxStatus('Transaction hash: ' + result.transactionHash);
       }
@@ -266,7 +296,20 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const handleOpenForClaiming = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -277,7 +320,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'forClaiming',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI,
         params: [
           poll.id,
@@ -306,7 +349,19 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const handleOpenPoll = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -316,7 +371,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'openPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI,
         params: [
           poll.id,
@@ -345,7 +400,19 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const handleClosePoll = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -355,7 +422,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'closePoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI,
         params: [
           poll.id,
@@ -383,7 +450,19 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
 
   const handlePollStatusChange = async (poll: PollState, method: string) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -393,7 +472,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: method,
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI,
         params: [
           poll.id,
@@ -419,9 +498,22 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     }
   };
 
-  const handleFundPollLocal = async (poll) => {
+  const handleFundPollLocal = async (poll: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -435,7 +527,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
     try {
       await execute({
         function: 'fundPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -460,9 +552,17 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
       setIsLoading(false);
       setIsFundingModalOpen(false);
     }
-  }
+  };
 
   const onClaimRewards = () => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
     handleClaimRewards(
       poll,
       isConnected,
@@ -473,7 +573,8 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
       setTxStatus,
       setIsPolling,
       setIsLoading,
-      setIsClaimModalOpen
+      setIsClaimModalOpen,
+      config.chains[config.currentNetworkIndex].dpolls.contractAddress
     );
   };
 
@@ -506,7 +607,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
         </div>
 
         <div className="space-y-2">
-          {(modOptions || []).slice(0, 3).map((option, index) => (
+          {(modOptions || []).slice(0, 3).map((option: any, index: number) => (
             <div key={index} className="relative pt-1">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs font-medium text-muted-foreground">{typeof option === 'string' ? option : option.text}</span>
@@ -618,7 +719,7 @@ function PollCard({ poll, type, fetchPolls, handleTabChange, AAaddress, handleFu
         maskClosable={false}
       >
         <Space direction="vertical" size="middle">
-        {modOptions.map((option, index) => (
+        {modOptions.map((option: any, index: number) => (
           <Button
             key={index} block onClick={() => handleOptionVote(option)}
             loading={isVoting}

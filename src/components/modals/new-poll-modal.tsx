@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useSendUserOp, useSignature } from '@/hooks';
 import { ethers } from 'ethers';
 
@@ -17,6 +16,8 @@ import PollStep1 from "@/components/poll-steps/new-poll-step1";
 import PollStep2 from "@/components/poll-steps/new-poll-step2";
 import { PollState } from '@/types/poll';
 import PollStep3 from "../poll-steps/new-poll-step3";
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 const STEPS = [
   { id: 1, title: "Content", description: "Question, description & duration" },
@@ -30,6 +31,8 @@ interface NewPollModalProps {
 }
 
 export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const { AAaddress, isConnected, simpleAccountInstance } = useSignature();
   const navigate = useNavigate();
 
@@ -44,7 +47,20 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
 
   const handleCreatePoll = async (pollForm: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -53,7 +69,7 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
     setTxStatus('');
 
     try {
-      const rewardPerResponse = pollForm.rewardDistribution === "split" ?  "0" : pollForm.rewardPerResponse;
+      const rewardPerResponse = pollForm.rewardDistribution === "equal-share" ?  "0" : pollForm.rewardPerResponse;
 
       const pollData = [
         pollForm.subject,
@@ -85,7 +101,7 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
 
       await execute({
         function: 'createPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: pollData,
         value: value
@@ -124,7 +140,7 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
     // Step 3: Settings
     fundingType: "self-funded",
     openImmediately: true,
-    rewardDistribution: "split",
+    rewardDistribution: "equal-share",
     targetFund: "",
     rewardPerResponse: "",
     maxResponses: "",
@@ -173,7 +189,7 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
       case 2:
         return formData.options.every((option) => option.trim() !== "")
       case 3:
-        return formData.fundingType && (formData.rewardDistribution === "split" || formData.rewardPerResponse)
+        return formData.fundingType && (formData.rewardDistribution === "equal-share" || formData.rewardPerResponse)
       default:
         return false
     }

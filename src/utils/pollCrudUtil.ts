@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import { POLLS_DAPP_ABI } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { PollState } from '@/types/poll';
 
 interface CreatePollParams {
@@ -9,6 +8,7 @@ interface CreatePollParams {
   isConnected: boolean;
   execute: (params: any) => Promise<any>;
   waitForUserOpResult: () => Promise<any>;
+  contractAddress: string;
   onSuccess?: () => void;
   onError?: (error: any) => void;
   onLoadingChange?: (isLoading: boolean) => void;
@@ -23,6 +23,7 @@ export const handleCreatePoll = async ({
   isConnected,
   execute,
   waitForUserOpResult,
+  contractAddress,
   onSuccess,
   onError,
   onLoadingChange,
@@ -54,7 +55,7 @@ export const handleCreatePoll = async ({
 
       await execute({
         function: 'createUnfundedPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [pollInput],
         value: 0
@@ -69,7 +70,7 @@ export const handleCreatePoll = async ({
 
       let targetFund = null;
       let rewardPerResponse = "";
-      if (pollForm.rewardDistribution === "split") {
+      if (pollForm.rewardDistribution === "equal-share") {
         rewardPerResponse = "0";
         targetFund = pollForm.targetFund || "0";
       } else {
@@ -103,7 +104,7 @@ export const handleCreatePoll = async ({
       console.log('pollInput before submission ', pollInput)
       await execute({
         function: 'createPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [pollInput],
         value: ethers.utils.parseEther(value).toString()
@@ -111,11 +112,12 @@ export const handleCreatePoll = async ({
     }
 
     const result = await waitForUserOpResult();
+    console.log('result', result);
     onUserOpHashChange?.(result.userOpHash);
     onPollingChange?.(true);
-    onSuccess?.();
 
     if (result.result === true) {
+      onSuccess?.();
       onPollingChange?.(false);
     } else if (result.transactionHash) {
       onTxStatusChange?.('Transaction hash: ' + result.transactionHash);

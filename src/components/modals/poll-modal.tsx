@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { useSignature, useConfig, useSendUserOp } from '@/hooks';
+import { useState, useContext } from "react"
+import { useSignature, useSendUserOp } from '@/hooks';
 import { POLLS_DAPP_ABI,  } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { computePercentage } from '@/utils/mathUtils';
+import { SendUserOpContext } from '@/contexts';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 import { Tag } from "antd"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui_v3/dialog"
@@ -40,21 +42,40 @@ interface PollModalProps {
 export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }: PollModalProps) {
   console.log('featureFlagNew', featureFlagNew)
   console.log('modal poll', poll)
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [hasVoted, setHasVoted] = useState(poll?.userHasVoted || false)
+  const [isFundingModalOpen, setIsFundingModalOpen] = useState(false);
 
-  const { isConnected, } = useSignature();
+  const { isConnected, AAaddress } = useSignature();
   const { execute, waitForUserOpResult } = useSendUserOp();
   const [userOpHash, setUserOpHash] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
 
+  const { isWalletPanel, setIsWalletPanel } = useContext(SendUserOpContext)!
+  const [isWalletConnected, setIsWalletConnected] = useState(false)
+
   if (!poll) return null
 
   const handleOptionVote = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -67,7 +88,7 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
