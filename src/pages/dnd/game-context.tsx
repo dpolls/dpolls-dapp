@@ -3,9 +3,10 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts'
 import { useSignature, useSendUserOp, useConfig } from '@/hooks';
 import { ethers } from 'ethers';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 // Define types
 type Position = {
@@ -69,6 +70,8 @@ function generateRandomPosition(min: number, max: number) {
 
 export function GameProvider({ children, AAaddress, handleTabChange }: 
   { children: React.ReactNode, AAaddress: string, handleTabChange: (tab: string) => void, pollsSrc: any[] }) {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [characterPosition, setCharacterPosition] = useState<Position>({ x: 50, y: 50 })
   const [targetPosition, setTargetPosition] = useState<Position | null>(null)
 
@@ -80,7 +83,6 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
   const [isVoting, setIsVoting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const config = useConfig(); // Get config to access RPC URL
 
   const [polls, setPolls] = useState<Poll[]>([])
   const [activePoll, setActivePoll] = useState<Poll | null>(null)
@@ -151,7 +153,20 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
     console.log("poll", poll)
     console.log("option", option)
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -162,7 +177,7 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -204,15 +219,24 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
   const fetchPolls = async () => {
     if (!isConnected || !AAaddress) return;
 
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       
       // Create a provider using the RPC URL from config
-      const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc);
       
       // Create a contract instance for the NFT contract
       const pollsContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.dpollsContract,
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         POLLS_DAPP_ABI,
         provider
       );

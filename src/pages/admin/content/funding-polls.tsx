@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui_v2/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v2/card";
 import { WalletConnector } from "@/components/wallet/wallet-connector";
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useSendUserOp, useSignature } from '@/hooks';
 import { PollState } from "@/types/poll";
 import { getCompressedAddress } from "@/utils/addressUtil";
@@ -14,7 +13,9 @@ import { calculateTimeLeft } from "@/utils/timeUtils";
 import { Button, Form, Input, InputNumber, Modal, Result, Select } from 'antd';
 import { ethers } from 'ethers';
 import { CircleDollarSign, Clock, Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 interface FundingPollsProps {
   polls: PollState[]
@@ -67,7 +68,8 @@ export default function FundingPolls({ polls, fetchPolls, handleTabChange, isWal
 function PollCard({ poll, type, fetchPolls }:
   { poll: PollState, type: string, fetchPolls: () => void }) {
 
-  console.log('poll', poll)
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const selectAfter = (
     <Select defaultValue="NERO" style={{ width: "auto" }}>
       <Select.Option value="NERO">NERO</Select.Option>
@@ -75,7 +77,7 @@ function PollCard({ poll, type, fetchPolls }:
   );
 
   const { isConnected, } = useSignature();
-  const { execute, waitForUserOpResult } = useSendUserOp();
+  const { execute, waitForUserOpResult, sendUserOp } = useSendUserOp();
   const [userOpHash, setUserOpHash] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
@@ -94,9 +96,22 @@ function PollCard({ poll, type, fetchPolls }:
     form.setFieldsValue({ contribution: remainingAmount });
   }, [poll.funds, poll.targetFund, form]);
 
-  const handleFundPollLocal = async (poll) => {
+  const handleFundPollLocal = async (poll: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -110,7 +125,7 @@ function PollCard({ poll, type, fetchPolls }:
     try {
       await execute({
         function: 'fundPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,

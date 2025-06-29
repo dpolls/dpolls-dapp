@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom'
 import { Tag, Card as AntdCard, Avatar, Button } from "antd";
 import { Input } from "@/components/ui_v3/input"
@@ -9,15 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Users, Trophy, Clock, Eye, Filter } from "lucide-react"
 import { getTagColor } from "@/utils/tagColors"
 
-import { useSignature, useConfig, useSendUserOp } from '@/hooks';
+import { useSignature, useConfig } from '@/hooks';
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { ethers } from 'ethers';
 import { convertTimestampToDate } from '@/utils/format';
 import { PollState } from '@/types/poll';
 import LandingPageHeader from "@/pages/landing/landing-header"
 import { calculateTimeLeft } from "@/utils/timeUtils"
 import { VotePollModal } from "@/components/modals/vote-poll-modal"
+import { ConfigContext } from '@/contexts'
 
 
 export default function LivePollsPage() {
@@ -27,8 +27,8 @@ export default function LivePollsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
 
   const { AAaddress, isConnected } = useSignature();
+  const config = useContext(ConfigContext);
 
-  const config = useConfig(); // Get config to access RPC URL
   const [isLoading, setIsLoading] = useState(false);
   const [txStatus, setTxStatus] = useState<string>('');
   const [polls, setPolls] = useState<PollState[]>([]);
@@ -41,12 +41,17 @@ export default function LivePollsPage() {
     try {
       setIsLoading(true);
 
+      if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+        setTxStatus('Contract address not configured');
+        return;
+      }
+
       // Create a provider using the RPC URL from config
-      const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc);
 
       // Create a contract instance for the NFT contract
       const pollsContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.dpollsContract,
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         POLLS_DAPP_ABI,
         provider
       );

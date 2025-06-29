@@ -4,8 +4,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v2/avatar";
 import { Badge } from "@/components/ui_v2/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v2/card";
 import { WalletConnector } from "@/components/wallet/wallet-connector";
-import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useSendUserOp, useSignature } from '@/hooks';
 import { PollState } from "@/types/poll";
 import { getCompressedAddress } from "@/utils/addressUtil";
@@ -13,9 +11,11 @@ import { computePercentage } from "@/utils/mathUtils";
 import { Button, Form, Input, Modal, Result } from 'antd';
 import { ethers } from 'ethers';
 import { CircleDollarSign, Clock, Users, Heart } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { handleClaimRemainingFunds, handleDonateRemainingFunds } from '@/utils/pollUtils';
 import ReactConfetti from 'react-confetti';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 interface CompletedPollsProps {
   AAaddress: string
@@ -71,6 +71,8 @@ export default function CompletedPolls({ AAaddress, polls, fetchPolls, handleTab
 function PollCard({ poll, type, fetchPolls, AAaddress }:
   { poll: PollState, type: string, fetchPolls: () => void, AAaddress: string }) {
 
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   console.log('poll', poll)
   const isCreator = poll.creator.toLowerCase() === AAaddress.toLowerCase();
   console.log('isCreator', isCreator)
@@ -105,6 +107,14 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
   }, []);
 
   const onClaimRemainingFunds = () => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
     handleClaimRemainingFunds(
       poll,
       isConnected,
@@ -115,11 +125,20 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setTxStatus,
       setIsPolling,
       setIsLoading,
-      setIsModalOpen
+      setIsModalOpen,
+      config.chains[config.currentNetworkIndex].dpolls.contractAddress
     );
   };
 
   const onDonateRemainingFunds = () => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
     handleDonateRemainingFunds(
       poll,
       isConnected,
@@ -131,6 +150,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
       setIsPolling,
       setIsDonateLoading,
       setIsDonateModalOpen,
+      config.chains[config.currentNetworkIndex].dpolls.contractAddress,
       () => {
         setIsThankYouModalOpen(true);
         setShowConfetti(true);

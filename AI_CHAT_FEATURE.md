@@ -57,7 +57,7 @@ The feature uses a new API endpoint: `POST /api/poll-ai`
       "isOpenImmediately": true,
       "targetFund": "0.1",
       "rewardToken": "0x0000000000000000000000000000000000000000",
-      "rewardDistribution": "split"
+      "rewardDistribution": "equal-share"
     },
     "message": "Successfully generated poll: \"Favorite Programming Languages\"",
     "mongoId": "507f1f77bcf86cd799439011"

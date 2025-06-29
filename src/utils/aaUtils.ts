@@ -2,7 +2,6 @@
 import { ethers } from 'ethers';
 import { Client, Presets } from 'userop';
 import neroConfig from '../../nerowallet.config'
-import { CONTRACT_ADDRESSES } from '@/constants/contracts'
 import { POLLS_DAPP_ABI } from '@/constants/abi';
 
 // Get Ethereum provider
@@ -155,6 +154,7 @@ export const executeSponsoredOperation = async (
     accountSigner: ethers.Signer,
     pollId: string,
     amount: any,
+    contractAddress: string,
     options?: {
       apiKey?: string;
       gasMultiplier?: number;
@@ -164,7 +164,7 @@ export const executeSponsoredOperation = async (
       // Execute the mint function with sponsored gas
       return await executeSponsoredOperation(
         accountSigner,
-        CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress,
         POLLS_DAPP_ABI,
         'fundPoll',
         [pollId],

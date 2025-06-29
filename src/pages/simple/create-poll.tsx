@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 
 import { useSendUserOp, useSignature } from '@/hooks';
@@ -13,6 +13,8 @@ import PollStep2 from "@/components/poll-steps/new-poll-step2";
 import PollStep3 from "@/components/poll-steps/new-poll-step3";
 import { PollState } from '@/types/poll';
 import { handleCreatePoll } from '@/utils/pollCrudUtil';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 const STEPS = [
   { id: 1, title: "Content", description: "Question, description & duration" },
@@ -21,6 +23,8 @@ const STEPS = [
 ]
 
 export default function CreatePoll() {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const { AAaddress, isConnected, simpleAccountInstance } = useSignature();
   const navigate = useNavigate();
 
@@ -34,12 +38,21 @@ export default function CreatePoll() {
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const handleCreatePollWrapper = async (pollForm: PollState) => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
     await handleCreatePoll({
       pollForm,
       AAaddress,
       isConnected,
       execute,
       waitForUserOpResult,
+      contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
       onSuccess: () => navigate("/polls/live"),
       onLoadingChange: setIsLoading,
       onUserOpHashChange: setUserOpHash,
@@ -65,7 +78,7 @@ export default function CreatePoll() {
     // Step 3: Settings
     fundingType: "self-funded",
     openImmediately: true,
-    rewardDistribution: "split",
+    rewardDistribution: "equal-share",
     targetFund: "",
     rewardPerResponse: "",
     maxResponses: "",
@@ -112,7 +125,7 @@ export default function CreatePoll() {
       case 2:
         return formData.options?.every((option: string) => option.trim() !== "")
       case 3:
-        return formData.fundingType && (formData.rewardDistribution === "split" || formData.rewardPerResponse)
+        return formData.fundingType && (formData.rewardDistribution === "equal-share" || formData.rewardPerResponse)
       default:
         return false
     }

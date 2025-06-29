@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui_v2/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v2/card";
 import { WalletConnector } from "@/components/wallet/wallet-connector";
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useSendUserOp, useSignature } from '@/hooks';
 import ManagePoll from "@/pages/simple/manage-poll";
 import { PollState } from "@/types/poll";
@@ -16,8 +15,10 @@ import { calculateTimeLeft } from "@/utils/timeUtils";
 import { Button, Form, InputNumber, Modal, Result, Select, Space } from 'antd';
 import { ethers } from 'ethers';
 import { CircleDollarSign, Clock, Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { handleClaimRewards } from '@/utils/pollUtils';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 interface ManagePollsProps {
   AAaddress: string
@@ -72,6 +73,8 @@ export default function ManagePolls({ AAaddress, handleTabChange, polls, fetchPo
 function PollCard({ poll, type, fetchPolls, AAaddress, }: 
   { poll: PollState, type: string, fetchPolls: () => void, AAaddress?: string, }) {
   
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const selectAfter = (
     <Select defaultValue="NERO" style={{ width: "auto" }}>
       <Select.Option value="NERO">NERO</Select.Option>
@@ -122,9 +125,22 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     setSelectedPoll(null)
   }
 
-  const handleOptionVote = async (option) => {
+  const handleOptionVote = async (option: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -135,7 +151,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -166,7 +182,20 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handleUpdatePoll = async (updatedPoll: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -177,7 +206,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'updatePoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           updatedPoll.id,
@@ -198,6 +227,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
       if (result.result === true) {
         setIsPolling(false);
+        fetchPolls();
       } else if (result.transactionHash) {
         setTxStatus('Transaction hash: ' + result.transactionHash);
       }
@@ -212,7 +242,20 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handleOpenForClaiming = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -223,7 +266,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'forClaiming',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,
@@ -252,7 +295,19 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handleOpenPoll = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -262,7 +317,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'openPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,
@@ -291,7 +346,19 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handleClosePoll = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -301,7 +368,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'closePoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,
@@ -330,7 +397,19 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handleCancelPoll = async (poll: PollState) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -340,7 +419,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'cancelPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,
@@ -369,7 +448,19 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
 
   const handlePollStatusChange = async (poll: PollState, method: string) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
     setIsLoading(true);
@@ -379,7 +470,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: method,
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,
@@ -406,6 +497,14 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
   };
 
   const onClaimRewards = () => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
     handleClaimRewards(
       poll,
       isConnected,
@@ -416,13 +515,27 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
       setTxStatus,
       setIsPolling,
       setIsLoading,
-      setIsClaimModalOpen
+      setIsClaimModalOpen,
+      config.chains[config.currentNetworkIndex].dpolls.contractAddress
     );
   };
 
-  const handleFundPollLocal = async (poll) => {
+  const handleFundPollLocal = async (poll: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -436,7 +549,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress, }:
     try {
       await execute({
         function: 'fundPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,

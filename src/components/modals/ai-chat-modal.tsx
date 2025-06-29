@@ -1,15 +1,26 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { ConfigContext } from '@/contexts'
 import { Button } from "@/components/ui_v3/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui_v3/card";
 import { Textarea } from "@/components/ui_v3/textarea";
 import { Label } from "@/components/ui_v3/label";
-import { X, Send, Bot, Loader2, Sparkles, RefreshCw, PlusCircle } from "lucide-react";
+import { X, Send, Bot, Loader2, Sparkles, RefreshCw, PlusCircle, RotateCcw } from "lucide-react";
 import { useSendUserOp, useSignature } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
 import { handleCreatePoll } from '@/utils/pollCrudUtil';
-import dpollsConfig from '@/../dpolls.config';
+
+const INITIAL_MESSAGE = `<p>Hi! I'm your AI assistant. Tell me what kind of poll you'd like to create.</p>
+
+<p class="mt-4">It can be as simple providing a subject like:</p>
+<p class="mt-2 ml-4 italic">"Create a poll about user satisfaction with our mobile app"</p>
+
+<p class="mt-4">Or providing a subject and options like:</p>
+<p class="mt-2 ml-4 italic">"Create a poll about user satisfaction with our mobile app with the options: Very Satisfied, Satisfied, Neutral, Dissatisfied, Very Dissatisfied"</p>
+
+<p class="mt-4">Or detailed like:</p>
+<p class="mt-2 ml-4 italic">"Create a poll about user satisfaction with our mobile app with the options: Very Satisfied, Satisfied, Neutral, Dissatisfied, Very Dissatisfied. I want the poll to gather 100 responses. I'll be funding the poll and each response will get 0.001 NERO each. I want to gather responses for 90 days."</p>`;
 
 interface AIChatModalProps {
   isOpen: boolean;
@@ -29,11 +40,13 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm your AI assistant. Tell me what kind of poll you'd like to create. For example: 'Create a poll about favorite programming languages'",
+      text: INITIAL_MESSAGE,
       isUser: false,
       timestamp: new Date()
     }
   ]);
+  const config = useContext(ConfigContext)
+
   const [inputText, setInputText] = useState('');
   const [chatState, setChatState] = useState<ChatState>('initial');
   const [currentPoll, setCurrentPoll] = useState<any>(null);
@@ -48,6 +61,20 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  const clearChat = () => {
+    setMessages([
+      {
+        id: '1',
+        text: INITIAL_MESSAGE,
+        isUser: false,
+        timestamp: new Date()
+      }
+    ]);
+    setInputText('');
+    setChatState('initial');
+    setCurrentPoll(null);
+  };
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
@@ -66,7 +93,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
 
   const generatePollPreview = async (prompt: string) => {
     try {
-      const response = await fetch(`${dpollsConfig.api}/api/poll-ai`, {
+      const response = await fetch(`${config?.chains[config?.currentNetworkIndex].dpolls.api}/api/poll-ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
@@ -98,7 +125,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     setMessages(prev => [...prev, { id: Date.now().toString(), text: `Regenerating with feedback: "${feedback}"`, isUser: true, timestamp: new Date() }]);
 
     try {
-      const response = await fetch(`${dpollsConfig.api}/api/poll-ai-regen`, {
+      const response = await fetch(`${config?.chains[config?.currentNetworkIndex].dpolls.api}/api/poll-ai-regen`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'regenerate', pollData: currentPoll, feedback }),
@@ -130,6 +157,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     }
     setChatState('registering');
 
+    console.log('currentPoll', currentPoll);
     const pollFormForUtil = {
         ...currentPoll,
         duration: String(currentPoll.durationDays),
@@ -140,6 +168,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
         minContribution: currentPoll.minContribution || "0.000001",
         voteWeight: currentPoll.voteWeight || "simple",
     };
+    console.log('pollFormForUtil', pollFormForUtil);
 
     await handleCreatePoll({
         pollForm: pollFormForUtil,
@@ -147,6 +176,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
         isConnected,
         execute,
         waitForUserOpResult,
+        contractAddress: config?.chains[config?.currentNetworkIndex].dpolls.contractAddress ?? '',
         onSuccess: () => {
             setMessages(prev => [...prev, { id: Date.now().toString(), text: "Great! Your poll is being created on the blockchain. You will be redirected.", isUser: false, timestamp: new Date() }]);
             setCurrentPoll(null);
@@ -195,14 +225,29 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
             <Bot className="h-6 w-6 text-primary" />
             <h2 className="text-lg font-semibold">AI Poll Creator</h2>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0"><X className="h-4 w-4" /></Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearChat} 
+              className="h-8 px-3 text-xs"
+              disabled={isLoading}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Clear Chat
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0"><X className="h-4 w-4" /></Button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] rounded-lg p-3 ${message.isUser ? 'bg-primary text-white' : 'bg-muted'}`}>
-                <p className="text-sm">{message.text}</p>
+                <div 
+                  className="text-sm" 
+                  dangerouslySetInnerHTML={{ __html: message.text }}
+                />
               </div>
             </div>
           ))}
@@ -228,10 +273,19 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
                 <CardTitle className="flex items-center space-x-2"><Sparkles className="h-4 w-4 text-primary" /><span>Poll Preview</span></CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div><Label>Subject</Label><p className="text-sm text-muted-foreground">{currentPoll.subject}</p></div>
                   <div><Label>Description</Label><p className="text-sm text-muted-foreground">{currentPoll.description}</p></div>
                   <div><Label>Options</Label><div className="flex flex-wrap gap-1 mt-1">{currentPoll.options.map((o: string, i: number) => (<span key={i} className="px-2 py-1 bg-muted rounded text-xs">{o}</span>))}</div></div>
+                  
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                    <div><Label className="text-xs">Max Responses</Label><p className="text-sm font-medium">{currentPoll.maxResponses}</p></div>
+                    <div><Label className="text-xs">Reward Per Response</Label><p className="text-sm font-medium">{currentPoll.rewardPerResponse} NERO</p></div>
+                    <div><Label className="text-xs">Distribution</Label><p className="text-sm font-medium capitalize">{currentPoll.rewardDistribution === 'equal-share' ? 'Equal Share' : currentPoll.rewardDistribution}</p></div>
+                    <div><Label className="text-xs">Duration</Label><p className="text-sm font-medium">{currentPoll.durationDays} days</p></div>
+                    <div><Label className="text-xs">Funding Type</Label><p className="text-sm font-medium capitalize">{currentPoll.fundingType?.replace('-', ' ')}</p></div>
+                    <div><Label className="text-xs">Target Fund</Label><p className="text-sm font-medium">{currentPoll.targetFund} NERO</p></div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

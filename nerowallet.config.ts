@@ -25,6 +25,10 @@ const config = {
           symbol: 'NERO',
         },
       },
+      dpolls: {
+        api: import.meta.env.VITE_TESTNET_DPOLLS_API ?? '',
+        contractAddress: import.meta.env.VITE_TESTNET_DPOLLS_CONTRACT_ADDRESS ?? '',
+      },
       aa: {
         bundler: 'https://bundler-testnet.nerochain.io',
         paymaster: 'https://paymaster-testnet.nerochain.io',
@@ -80,6 +84,10 @@ const config = {
           name: 'NERO',
           symbol: 'NERO',
         },
+      },
+      dpolls: {
+        api: import.meta.env.VITE_MAINNET_DPOLLS_API ?? '',
+        contractAddress: import.meta.env.VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS ?? '',
       },
       aa: {
         bundler: 'https://bundler-mainnet.nerochain.io',

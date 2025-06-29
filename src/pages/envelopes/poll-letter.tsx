@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import { useSignature, useSendUserOp } from '@/hooks';
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts'
 import { Button } from 'antd';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 interface PollLetterProps {
   poll: {
@@ -26,6 +27,8 @@ const NERO_POLL_ABI = [
 ];
 
 export default function PollLetter({ poll, onClose, fetchPolls }: PollLetterProps) {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const { isConnected, } = useSignature();
@@ -42,11 +45,24 @@ export default function PollLetter({ poll, onClose, fetchPolls }: PollLetterProp
     setSelectedOption(option)
   }
 
-  const handleOptionVote = async (poll, option) => {
+  const handleOptionVote = async (poll: any, option: string) => {
     console.log("poll", poll)
     console.log("option", option)
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -57,7 +73,7 @@ export default function PollLetter({ poll, onClose, fetchPolls }: PollLetterProp
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,

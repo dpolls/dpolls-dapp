@@ -1,7 +1,8 @@
+"use client"
+
 import { useState, useContext, useEffect } from 'react';
 import { useSignature, useSendUserOp, useConfig, } from '@/hooks';
 import { POLLS_DAPP_ABI,  } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts'
 import { ethers } from 'ethers';
 import Dashboard from "@/pages/simple/dashboard"
 import CreatePoll from "@/pages/simple/create-poll"
@@ -10,6 +11,8 @@ import DungeonsAndDragons from "@/pages/dnd/page"
 import LeaderboardPage from '@/pages/leaderboard/page';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 // Define NeroNFT ABI with the mint function
 const NERO_POLL_ABI = [
@@ -21,18 +24,19 @@ const NERO_POLL_ABI = [
 ];
 
 const HomePage = () => {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeDashboardTab, setActiveDashboardTab] = useState('active');
   const { AAaddress, isConnected, simpleAccountInstance } = useSignature();
   const [isVoting, setIsVoting] = useState(false);
 
   const { execute, waitForUserOpResult, sendUserOp } = useSendUserOp();
-  const config = useConfig(); // Get config to access RPC URL
   const [isLoading, setIsLoading] = useState(false);
   const [userOpHash, setUserOpHash] = useState<string | null>(null);
   const [txStatus, setTxStatus] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
-  const [polls, setPolls] = useState<any[]>([]);
+  const [polls, setPolls] = useState<PollState[]>([]);
   
   useEffect(() => {
     if (isConnected) {
@@ -55,7 +59,20 @@ const HomePage = () => {
 
   const handleCreatePoll = async (pollForm: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -66,7 +83,7 @@ const HomePage = () => {
     try {
       await execute({
         function: 'createPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           pollForm.subject,
@@ -102,7 +119,20 @@ const HomePage = () => {
 
   const handleOptionVote = async (poll: any, option: any) => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -113,7 +143,7 @@ const HomePage = () => {
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: NERO_POLL_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -144,15 +174,24 @@ const HomePage = () => {
   const fetchPolls = async () => {
     if (!isConnected || !AAaddress) return;
 
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       
       // Create a provider using the RPC URL from config
-      const provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc);   
       
       // Create a contract instance for the NFT contract
       const pollsContract = new ethers.Contract(
-        CONTRACT_ADDRESSES.dpollsContract,
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         POLLS_DAPP_ABI,
         provider
       );
@@ -310,7 +349,7 @@ const HomePage = () => {
         />
       )}
       {activeTab === 'create-poll' && (
-        <CreatePoll handleCreatePoll={handleCreatePoll} handleTabChange={handleTabChange}/>
+        <CreatePoll />
       )}
     </div>
   );

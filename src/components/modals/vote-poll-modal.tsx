@@ -23,6 +23,8 @@ import { CheckCircle, Clock, Share2, Trophy, Users, Vote, CircleDollarSign } fro
 import Image from "next/image";
 import { WalletConnector } from '@/components/wallet/wallet-connector';
 import { computePercentage } from '@/utils/mathUtils';
+import { ConfigContext } from '@/contexts';
+import { useToast } from '@/components/ui_v3/use-toast';
 
 interface PollOption {
   id: string
@@ -42,6 +44,8 @@ interface PollModalProps {
 }
 
 export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }: PollModalProps) {
+  const config = useContext(ConfigContext);
+  const { toast } = useToast();
   const [selectedOption, setSelectedOption] = useState<string>("")
   const [isFundingModalOpen, setIsFundingModalOpen] = useState(false);
   const [form] = Form.useForm();
@@ -79,7 +83,20 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
 
   const handleOptionVote = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -90,7 +107,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     try {
       await execute({
         function: 'submitResponse',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI, // Use the specific ABI with mint function
         params: [
           poll.id,
@@ -158,7 +175,20 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
 
   const handleFundPollLocal = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast({
+        title: "Error",
+        description: "Please connect your wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      toast({
+        title: "Error",
+        description: "Contract address not configured",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -172,7 +202,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     try {
       await execute({
         function: 'fundPoll',
-        contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
         params: [
           poll.id,

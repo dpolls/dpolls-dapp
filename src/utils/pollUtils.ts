@@ -1,5 +1,4 @@
 import { POLLS_DAPP_ABI } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { PollState } from '@/types/poll';
 
 export const handleClaimRewards = async (
@@ -12,7 +11,8 @@ export const handleClaimRewards = async (
   setTxStatus: (status: string) => void,
   setIsPolling: (isPolling: boolean) => void,
   setIsLoading: (isLoading: boolean) => void,
-  setIsModalOpen: (isOpen: boolean) => void
+  setIsModalOpen: (isOpen: boolean) => void,
+  contractAddress: string
 ) => {
   if (!isConnected) {
     alert('Please connect your wallet first');
@@ -26,7 +26,7 @@ export const handleClaimRewards = async (
   try {
     await execute({
       function: 'claimReward',
-      contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+      contractAddress: contractAddress,
       abi: POLLS_DAPP_ABI,
       params: [poll.id],
       value: 0,
@@ -62,6 +62,7 @@ export const handleDonateRewards = async (
   setIsPolling: (isPolling: boolean) => void,
   setIsLoading: (isLoading: boolean) => void,
   setIsModalOpen: (isOpen: boolean) => void,
+  contractAddress: string,
   onSuccess?: () => void
 ) => {
   if (!isConnected) {
@@ -76,7 +77,7 @@ export const handleDonateRewards = async (
   try {
     await execute({
       function: 'donateReward',
-      contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+      contractAddress: contractAddress,
       abi: POLLS_DAPP_ABI,
       params: [poll.id],
       value: 0,
@@ -115,7 +116,8 @@ export const handleClaimRemainingFunds = async (
   setTxStatus: (status: string) => void,
   setIsPolling: (isPolling: boolean) => void,
   setIsLoading: (isLoading: boolean) => void,
-  setIsModalOpen: (isOpen: boolean) => void
+  setIsModalOpen: (isOpen: boolean) => void,
+  contractAddress: string
 ) => {
   if (!isConnected) {
     alert('Please connect your wallet first');
@@ -129,7 +131,7 @@ export const handleClaimRemainingFunds = async (
   try {
     await execute({
       function: 'claimRemainingFunds',
-      contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+      contractAddress: contractAddress,
       abi: POLLS_DAPP_ABI,
       params: [poll.id],
       value: 0,
@@ -165,6 +167,7 @@ export const handleDonateRemainingFunds = async (
   setIsPolling: (isPolling: boolean) => void,
   setIsLoading: (isLoading: boolean) => void,
   setIsModalOpen: (isOpen: boolean) => void,
+  contractAddress: string,
   onSuccess?: () => void
 ) => {
   if (!isConnected) {
@@ -179,7 +182,7 @@ export const handleDonateRemainingFunds = async (
   try {
     await execute({
       function: 'donateRemainingFunds',
-      contractAddress: CONTRACT_ADDRESSES.dpollsContract,
+      contractAddress: contractAddress,
       abi: POLLS_DAPP_ABI,
       params: [poll.id],
       value: 0,
