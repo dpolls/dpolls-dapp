@@ -17,11 +17,11 @@ import { useConfig, useSignature } from '@/hooks';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
 import { ethers } from 'ethers';
-import { BarChart, Dice5, LineChart, Mail, PieChart, Trophy } from "lucide-react";
-import { useToast } from '@/components/ui_v3/use-toast';
-import { PieChart as RePieChart, Pie, Cell, Tooltip, Legend, BarChart as ReBarChart, Bar, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { Dice5, Mail, Trophy } from "lucide-react";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Legend as ChartLegend, Tooltip as ChartTooltip } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
+import { useToast } from '@/components/ui_v3/use-toast';
+import { PieChart as RePieChart, Pie, Cell, Tooltip } from 'recharts';
 import type { ChartData, ChartOptions } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartLegend, ChartTooltip);
