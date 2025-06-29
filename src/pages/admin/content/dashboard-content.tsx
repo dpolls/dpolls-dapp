@@ -1,3 +1,9 @@
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Legend as ChartLegend, Tooltip as ChartTooltip, BarController,
+  LineController,
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartLegend, ChartTooltip, BarController, LineController);
+
 import { SendUserOpContext } from '@/contexts';
 import { useContext, useEffect, useState } from "react";
 
@@ -18,13 +24,10 @@ import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
 import { ethers } from 'ethers';
 import { Dice5, Mail, Trophy } from "lucide-react";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Legend as ChartLegend, Tooltip as ChartTooltip } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import { useToast } from '@/components/ui_v3/use-toast';
 import { PieChart as RePieChart, Pie, Cell, Tooltip } from 'recharts';
 import type { ChartData, ChartOptions } from 'chart.js';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ChartLegend, ChartTooltip);
 
 interface DashboardContentProps {
   activeTab: string
