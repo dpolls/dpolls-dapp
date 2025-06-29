@@ -69,6 +69,13 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     }
   }, [isWalletConnected, setIsWalletPanel])
 
+  // Reset selected option when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedOption("")
+    }
+  }, [isOpen])
+
   // Set initial form value when modal opens
   useEffect(() => {
     if (isFundingModalOpen && poll?.targetFund) {
