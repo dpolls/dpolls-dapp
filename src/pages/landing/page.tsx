@@ -610,7 +610,7 @@ export default function LandingPage() {
                 </li>
               </ul>
             </div>
-            <div>
+            {/* <div>
               <h3 className="font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-muted-foreground">
                 <li>
@@ -649,7 +649,7 @@ export default function LandingPage() {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
           </div>
           <div className="border-t mt-8 pt-8 text-center text-muted-foreground">
             <p>&copy; 2025 NERO dPolls. All rights reserved.</p>
