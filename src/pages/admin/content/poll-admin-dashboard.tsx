@@ -66,16 +66,16 @@ export default function PollAdminDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
+            {/* <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
-            </Button>
+            </Button> */}
             <Button variant="ghost" size="icon" onClick={() => setTourActive(true)}>
               <BadgeHelp className="h-5 w-5" />
               <span className="sr-only">Start Tour</span>
             </Button>
 
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
@@ -98,7 +98,7 @@ export default function PollAdminDashboard() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Log out</DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             {/* Mobile right sidebar toggle */}
             <Sheet>
