@@ -276,6 +276,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
                 <div className="space-y-3">
                   <div><Label>Subject</Label><p className="text-sm text-muted-foreground">{currentPoll.subject}</p></div>
                   <div><Label>Description</Label><p className="text-sm text-muted-foreground">{currentPoll.description}</p></div>
+                  <div><Label>Category</Label><p className="text-sm text-muted-foreground capitalize">{currentPoll.category}</p></div>
                   <div><Label>Options</Label><div className="flex flex-wrap gap-1 mt-1">{currentPoll.options.map((o: string, i: number) => (<span key={i} className="px-2 py-1 bg-muted rounded text-xs">{o}</span>))}</div></div>
                   
                   <div className="grid grid-cols-2 gap-4 pt-2 border-t">

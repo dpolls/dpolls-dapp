@@ -18,7 +18,7 @@ import { calculateTimeLeft } from "@/utils";
 import { getRandomBoolean } from "@/utils/booleanUtils";
 import { getTagColor } from "@/utils/tagColors";
 import { Tag, Card as AntdCard, Avatar } from "antd";
-import { ArrowRight, Clock, Coins, Eye, Shield, Trophy, Users } from "lucide-react";
+import { ArrowRight, CircleDollarSign, Clock, Coins, Eye, Shield, Trophy, Users } from "lucide-react";
 import { ConfigContext } from '@/contexts';
 import { useToast } from '@/components/ui_v3/use-toast';
 
@@ -187,15 +187,15 @@ export default function LandingPage() {
                 status: pollDetails.status,
                 createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
                 options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse,
+                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
                 maxResponses: pollDetails.maxResponses.toString(),
                 endDate: new Date(Number(pollDetails.endTime) * 1000),
                 isOpen: pollDetails.isOpen,
                 isFeatured: true || getRandomBoolean(),
                 totalResponses: pollDetails.totalResponses.toString(),
-                funds: pollDetails.funds,
-                minContribution: pollDetails.minContribution,
-                targetFund: pollDetails.targetFund,
+                funds: pollDetails.funds.toString(),
+                minContribution: pollDetails.minContribution.toString(),
+                targetFund: pollDetails.targetFund.toString(),
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
@@ -339,7 +339,7 @@ export default function LandingPage() {
                           } participants
                         </div>
                         <div className="flex items-center text-sm font-semibold text-primary">
-                          <Trophy className="h-4 w-4 mr-1" />
+                          <CircleDollarSign className="h-4 w-4 mr-1" />
                           {featureFlagNew ? 
                             parseFloat(ethers.utils.formatEther(poll.targetFund || '0'))
                             :

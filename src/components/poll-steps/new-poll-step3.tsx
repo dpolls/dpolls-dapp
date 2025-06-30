@@ -19,6 +19,19 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
   const [height, setHeight] = useState(formData.fundingType !== "unfunded" ? "auto" : "0");
   const [transform, setTransform] = useState(formData.fundingType !== "unfunded" ? "translateY(0)" : "translateY(-10px)");
 
+  // Auto-calculate targetFund when rewardDistribution is fixed
+  useEffect(() => {
+    if (formData.rewardDistribution === "fixed" && formData.rewardPerResponse && formData.maxResponses) {
+      const rewardPerResponse = parseFloat(formData.rewardPerResponse);
+      const maxResponses = parseInt(formData.maxResponses);
+      
+      if (!isNaN(rewardPerResponse) && !isNaN(maxResponses) && maxResponses > 0) {
+        const calculatedTargetFund = (rewardPerResponse * maxResponses).toFixed(6);
+        updateFormData("targetFund", calculatedTargetFund);
+      }
+    }
+  }, [formData.rewardDistribution, formData.rewardPerResponse, formData.maxResponses, updateFormData]);
+
   useEffect(() => {
     if (formData.fundingType === "unfunded") {
       setTransform("translateY(-10px)");
@@ -124,8 +137,8 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
               <Input
                 id="target-fund"
                 type="number"
-                step="0.001"
-                placeholder="1.0"
+                step="0.000001"
+                placeholder="0.000001"
                 min="0"
                 value={formData.targetFund}
                 onChange={(e) => updateFormData("targetFund", e.target.value)}
@@ -138,13 +151,18 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
               <Input
                 id="fixed-reward"
                 type="number"
-                step="0.001"
-                placeholder="0.01"
+                step="0.000001"
+                placeholder="0.000001"
                 min="0"
                 value={formData.rewardPerResponse}
                 onChange={(e) => updateFormData("rewardPerResponse", e.target.value)}
                 required={formData.fundingType === "unfunded" ? false : true}
               />
+              {formData.rewardPerResponse && formData.maxResponses && (
+                <div className="text-sm text-muted-foreground">
+                  Total target fund: {(parseFloat(formData.rewardPerResponse || "0") * parseInt(formData.maxResponses || "0")).toFixed(6)} NERO
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -158,7 +176,6 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
             value={formData.maxResponses}
             onChange={(e) => updateFormData("maxResponses", e.target.value)}
           />
-          <p className="text-sm text-muted-foreground">Leave empty for unlimited responses</p>
         </div>
         <div className="space-y-4">
           <Label>Vote Weight? *</Label>

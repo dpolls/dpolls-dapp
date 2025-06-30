@@ -4,7 +4,6 @@ import { SendUserOpContext } from '@/contexts';
 import { useSendUserOp, useSignature } from '@/hooks';
 
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { CONTRACT_ADDRESSES } from '@/constants/contracts';
 import { useContext, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui_v3/badge";
@@ -17,7 +16,7 @@ import { PollState } from "@/types/poll";
 import { getCompressedAddress } from "@/utils/addressUtil";
 import { calculateTimeLeft } from "@/utils/timeUtils";
 import { getTagColor } from "@/utils/tagColors";
-import { Modal, Tag, Tooltip, Form, InputNumber, Select } from "antd";
+import { Modal, Tag, Form, InputNumber, Select } from "antd";
 import { ethers } from "ethers";
 import { CheckCircle, Clock, Share2, Trophy, Users, Vote, CircleDollarSign } from "lucide-react";
 import Image from "next/image";
@@ -58,10 +57,55 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
   const [isPolling, setIsPolling] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
 
-  const hasVoted = poll?.responsesWithAddress?.some(response => response.address === AAaddress);
+  const hasVoted = poll?.responsesWithAddress?.some((response: any) => response.address === AAaddress);
 
   const { isWalletPanel, setIsWalletPanel } = useContext(SendUserOpContext)!
   const [isWalletConnected, setIsWalletConnected] = useState(false)
+
+  // Function to fetch updated poll data from contract
+  const fetchUpdatedPollData = async (pollId: number) => {
+    if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      console.error("Contract address not configured");
+      return null;
+    }
+
+    try {
+      const rpcUrl = config.chains[config.currentNetworkIndex].chain.rpc;
+      const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+      const contract = new ethers.Contract(
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+        POLLS_DAPP_ABI,
+        provider
+      );
+
+      // Fetch poll data
+      const pollData = await contract.getPoll(pollId);
+      const responses = await contract.getPollResponses(pollId);
+
+      // Transform the data to match PollState interface
+      const updatedPoll = {
+        ...poll,
+        totalResponses: pollData.totalResponses.toNumber(),
+        funds: pollData.funds.toString(),
+        status: pollData.status,
+        isOpen: pollData.isOpen,
+        responses: responses.map((response: any) => response.response),
+        responsesWithAddress: responses.map((response: any) => ({
+          address: response.responder,
+          response: response.response,
+          isClaimed: response.isClaimed,
+          weight: response.weight.toNumber(),
+          timestamp: new Date(response.timestamp.toNumber() * 1000),
+          reward: response.reward.toString()
+        }))
+      };
+
+      return updatedPoll;
+    } catch (error) {
+      console.error('Error fetching updated poll data:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (!isWalletConnected) {
@@ -129,7 +173,13 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
 
       if (result.result === true) {
         setIsPolling(false);
-        fetchPolls();
+        
+        // Fetch updated poll data instead of calling fetchPolls
+        const updatedPoll = await fetchUpdatedPollData(poll.id);
+        if (updatedPoll) {
+          // Update the poll object with new data
+          Object.assign(poll, updatedPoll);
+        }
       } else if (result.transactionHash) {
         setTxStatus('Transaction hash: ' + result.transactionHash);
       }
@@ -138,19 +188,20 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
       setTxStatus('An error occurred');
     } finally {
       setIsVoting(false);
-      onClose();
     }
 
   };
 
+  console.log('poll', poll)
   const modOptions = poll.options.map((option: string, index: number) => {
     return {
       id: index,
       text: option,
-      votes: poll.responses.filter((response: any) => response.option === index.toString()).length,
+      votes: poll.responses.filter((response: string) => response === index.toString()).length,
       percentage: computePercentage(poll.responses, index.toString())
     };
   });
+  console.log('modOptions', modOptions)
 
   const handleShare = () => {
     if (navigator.share) {
@@ -223,7 +274,13 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
 
       if (result.result === true) {
         setIsPolling(false);
-        fetchPolls();
+        
+        // Fetch updated poll data instead of calling fetchPolls
+        const updatedPoll = await fetchUpdatedPollData(poll.id);
+        if (updatedPoll) {
+          // Update the poll object with new data
+          Object.assign(poll, updatedPoll);
+        }
       } else if (result.transactionHash) {
         setTxStatus('Transaction hash: ' + result.transactionHash);
       }
@@ -307,7 +364,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                 <>
                   <p className="text-xs text-muted-foreground">Prize Pool</p>
                   <p className="font-semibold text-sm">
-                    {parseFloat(ethers.utils.formatEther(poll.funds || '0'))}
+                    {ethers.utils.formatEther(poll.funds || '0')} NERO
                   </p>
                 </>
               }
