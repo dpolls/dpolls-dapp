@@ -53,7 +53,11 @@ export default function CreatePoll() {
       execute,
       waitForUserOpResult,
       contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-      onSuccess: () => navigate("/polls/live"),
+      onSuccess: () => {
+        setTimeout(() => {
+          navigate("/polls/live");
+        }, 1000);
+      },
       onLoadingChange: setIsLoading,
       onUserOpHashChange: setUserOpHash,
       onTxStatusChange: setTxStatus,

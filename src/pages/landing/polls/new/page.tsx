@@ -55,7 +55,11 @@ export default function CreatePollPage() {
       execute,
       waitForUserOpResult,
       contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-      onSuccess: () => navigate("/polls/live"),
+      onSuccess: () => {
+        setTimeout(() => {
+          navigate("/polls/live");
+        }, 1000);
+      },
       onLoadingChange: setIsLoading,
       onUserOpHashChange: setUserOpHash,
       onTxStatusChange: setTxStatus,
@@ -128,7 +132,17 @@ export default function CreatePollPage() {
       case 2:
         return formData.options?.every((option: string) => option.trim() !== "")
       case 3:
-        return formData.fundingType && (formData.rewardDistribution === "equal-share" || formData.rewardPerResponse)
+        if (!formData.fundingType) return false;
+        
+        if (formData.rewardDistribution === "equal-share") {
+          // For equal-share, targetFund is required
+          return formData.targetFund && formData.targetFund.trim() !== "";
+        } else if (formData.rewardDistribution === "fixed") {
+          // For fixed, rewardPerResponse is required
+          return formData.rewardPerResponse && formData.rewardPerResponse.trim() !== "";
+        }
+        
+        return false;
       default:
         return false
     }

@@ -6,7 +6,7 @@ import { Tag, Card as AntdCard, Avatar, Button } from "antd";
 import { Input } from "@/components/ui_v3/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui_v3/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui_v3/select"
-import { Search, Users, Trophy, Clock, Eye, Filter } from "lucide-react"
+import { Search, Users, CircleDollarSign, Clock, Eye, Filter } from "lucide-react"
 import { getTagColor } from "@/utils/tagColors"
 
 import { useSignature, useConfig } from '@/hooks';
@@ -89,14 +89,14 @@ export default function LivePollsPage() {
                 status: pollDetails.status,
                 createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
                 options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse,
+                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
                 maxResponses: pollDetails.maxResponses.toString(),
                 endDate: new Date(Number(pollDetails.endTime) * 1000),
                 isOpen: pollDetails.isOpen,
                 totalResponses: pollResonsesWithAddress.length,
-                funds: pollDetails.funds,
-                minContribution: pollDetails.minContribution,
-                targetFund: pollDetails.targetFund,
+                funds: pollDetails.funds.toString(),
+                minContribution: pollDetails.minContribution.toString(),
+                targetFund: pollDetails.targetFund.toString(),
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
@@ -339,7 +339,7 @@ export default function LivePollsPage() {
               <span>{poll.totalResponses} / {poll.maxResponses} participants</span>
             </div>
             <div className="flex items-center text-sm font-semibold text-primary">
-              <Trophy className="h-4 w-4 mr-1" />
+              <CircleDollarSign className="h-4 w-4 mr-1" />
               <span>{ethers.utils.formatEther(poll.funds || '0')} / {ethers.utils.formatEther(poll.targetFund || '0')} NERO </span>
             </div>
           </div>

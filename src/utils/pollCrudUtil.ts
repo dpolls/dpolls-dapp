@@ -74,10 +74,11 @@ export const handleCreatePoll = async ({
         rewardPerResponse = "0";
         targetFund = pollForm.targetFund || "0";
       } else {
-        rewardPerResponse = pollForm.rewardPerResponse;
-        const rewardPerResponseNum = parseFloat(rewardPerResponse);
+        rewardPerResponse = pollForm.rewardPerResponse || "0";
+        const rewardPerResponseWei = ethers.utils.parseEther(rewardPerResponse);
         const maxResponsesNum = parseInt(pollForm.maxResponses || "0");
-        targetFund = (rewardPerResponseNum * maxResponsesNum).toString();
+        const targetFundWei = rewardPerResponseWei.mul(maxResponsesNum);
+        targetFund = ethers.utils.formatEther(targetFundWei);
       }
 
       const pollInput = {
@@ -102,6 +103,7 @@ export const handleCreatePoll = async ({
       };
 
       console.log('pollInput before submission ', pollInput)
+      console.log('value before submission ', value)
       await execute({
         function: 'createPoll',
         contractAddress: contractAddress,
@@ -112,15 +114,32 @@ export const handleCreatePoll = async ({
     }
 
     const result = await waitForUserOpResult();
-    console.log('result', result);
+    console.log('=== Poll Creation Result ===');
+    console.log('Full result object:', result);
+    console.log('result.result:', result.result);
+    console.log('result.transactionHash:', result.transactionHash);
+    console.log('result.userOpHash:', result.userOpHash);
+    console.log('Type of result.result:', typeof result.result);
+    console.log('================================');
+    
     onUserOpHashChange?.(result.userOpHash);
     onPollingChange?.(true);
 
+    // If we have a transaction hash, the transaction was processed
+    // We'll consider it successful if either result.result is true OR we have a transaction hash
     if (result.result === true) {
+      console.log('Transaction successful, calling onSuccess');
       onSuccess?.();
       onPollingChange?.(false);
     } else if (result.transactionHash) {
+      console.log('Transaction hash available, considering successful');
       onTxStatusChange?.('Transaction hash: ' + result.transactionHash);
+      // If we have a transaction hash, the transaction was processed successfully
+      onSuccess?.();
+      onPollingChange?.(false);
+    } else {
+      console.log('No transaction hash and result.result is not true');
+      onTxStatusChange?.('Transaction may have failed');
     }
   } catch (error) {
     console.error('Error:', error);

@@ -228,14 +228,14 @@ const HomePage = () => {
                 status: pollDetails.status,
                 createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
                 options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse,
+                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
                 maxResponses: pollDetails.maxResponses.toString(),
                 endDate: new Date(Number(pollDetails.endTime) * 1000),
                 isOpen: pollDetails.isOpen,
                 totalResponses: pollDetails.totalResponses.toString(),
-                funds: pollDetails.funds,
-                minContribution: pollDetails.minContribution,
-                targetFund: pollDetails.targetFund,
+                funds: pollDetails.funds.toString(),
+                minContribution: pollDetails.minContribution.toString(),
+                targetFund: pollDetails.targetFund.toString(),
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
