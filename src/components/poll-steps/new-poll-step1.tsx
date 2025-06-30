@@ -18,6 +18,17 @@ interface PollStepProps {
 }
 
 export default function PollStep1({ formData, updateFormData }: PollStepProps) {
+  // Check if today is the end of the month
+  const today = dayjs();
+  const isEndOfMonth = today.date() === today.daysInMonth();
+  
+  // Convert formData.endDate to dayjs if it exists, otherwise use null
+  const defaultDate = formData.endDate && formData.endDate instanceof Date 
+    ? dayjs(formData.endDate) 
+    : null;
+
+  // Set default picker value to next month if today is end of month
+  const defaultPickerValue = isEndOfMonth ? today.add(1, 'month').startOf('month') : undefined;
 
   return (
     <Card>
@@ -90,9 +101,10 @@ export default function PollStep1({ formData, updateFormData }: PollStepProps) {
               const durationInMs = endDatePicker?.toDate().getTime() - currentDate.getTime();
               const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
               updateFormData("duration", durationInDays)
-              updateFormData("endDate", endDatePicker)
+              updateFormData("endDate", endDatePicker?.toDate())
             }}
-            value={formData.endDate}
+            value={defaultDate}
+            defaultPickerValue={defaultPickerValue}
             picker="date"
             format="YYYY-MM-DD"
             style={{ width: '100%' }}
