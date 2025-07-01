@@ -127,7 +127,6 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
-              console.log('poll mod data', result);
 
               return result;
             } catch (error) {
