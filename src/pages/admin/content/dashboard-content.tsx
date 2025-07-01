@@ -253,7 +253,9 @@ interface PollCreatorDashboardProps {
 function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   // Compute summary
   const totalPolls = polls.length;
-  const totalResponses = polls.reduce((sum, poll) => sum + (poll.totalResponses || 0), 0);
+  const totalResponses = polls.reduce((sum, poll) => {
+    return sum + (poll.totalResponses ? parseInt(poll.totalResponses, 10) : 0);
+  }, 0);
   const activePolls = polls.filter(poll => poll.isOpen).length;
   // Safely sum BigNumbers for totalEarned
   let totalEarnedBN = polls.reduce((sum, poll) => {
@@ -314,7 +316,7 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   polls.forEach(poll => {
     if (poll.createdAt) {
       const date = new Date(poll.createdAt).toISOString().slice(0, 10); // YYYY-MM-DD
-      responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses || 0);
+      responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses ? parseInt(poll.totalResponses, 10) : 0);
     }
   });
   const responsesOverTime = Object.entries(responsesByDate)
