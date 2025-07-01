@@ -18,7 +18,7 @@ import { calculateTimeLeft } from "@/utils/timeUtils";
 import { getTagColor } from "@/utils/tagColors";
 import { Modal, Tag, Form, InputNumber, Select } from "antd";
 import { ethers } from "ethers";
-import { CheckCircle, Clock, Share2, Trophy, Users, Vote, CircleDollarSign } from "lucide-react";
+import { CheckCircle, Clock, Share2, Trophy, Users, Vote, CircleDollarSign, CircleX } from "lucide-react";
 import Image from "next/image";
 import { WalletConnector } from '@/components/wallet/wallet-connector';
 import { computePercentage } from '@/utils/mathUtils';
@@ -301,8 +301,9 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
 
   return (
     <Modal
-      title={poll.subject}
-      closable={{ 'aria-label': 'Custom Close Button' }}
+      title={<span style={{ whiteSpace: 'break-spaces', wordBreak: 'break-word', width: '95%', display: 'block'}}>{poll.subject}</span>}
+      closable={true}
+      closeIcon={<CircleX />}
       open={isOpen}
       onCancel={onClose}
       footer={null}
