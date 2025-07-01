@@ -32,7 +32,7 @@ const BaseInput: React.FC<BaseInputComponentProps> = ({
   const baseLabelClass = 'block text-text-secondary text-1sm'
   const baseInputClass = `${
     variant === 'send' ? 'w-full' : ''
-  } p-2 rounded-md text-secondary border border-border-primary bg-bg-primary outline-none transition-all duration-300 ease-in-out focus:border-black`
+  } p-2 rounded-md text-black border border-border-primary bg-bg-primary outline-none transition-all duration-300 ease-in-out focus:border-black`
   const baseErrorClass = 'text-red-500 text-xs mt-1'
   const baseHelpTextClass = 'text-text-secondary text-xs mt-1'
 
