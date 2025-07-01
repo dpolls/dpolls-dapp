@@ -286,6 +286,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
                     <div><Label className="text-xs">Duration</Label><p className="text-sm font-medium">{currentPoll.durationDays} days</p></div>
                     <div><Label className="text-xs">Funding Type</Label><p className="text-sm font-medium capitalize">{currentPoll.fundingType?.replace('-', ' ')}</p></div>
                     <div><Label className="text-xs">Target Fund</Label><p className="text-sm font-medium">{currentPoll.targetFund} NERO</p></div>
+                    <div><Label className="text-xs">Open Immediately</Label><p className="text-sm font-medium">{currentPoll.isOpenImmediately ? 'Yes' : 'No'}</p></div>
                   </div>
                 </div>
               </CardContent>
@@ -296,7 +297,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
         <div className="border-t p-4">
           {chatState === 'preview' ? (
             <div className="space-y-2">
-              <Textarea value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={handleKeyPress} placeholder="Not quite right? Provide feedback to regenerate..." className="flex-1 min-h-[60px] resize-none" disabled={isLoading} />
+              <Textarea value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={handleKeyPress} placeholder="Not quite right? Provide feedback to regenerate..." className="flex-1 min-h-[60px]" disabled={isLoading} />
               <div className="flex gap-2 justify-end">
                 <Button onClick={handleRegenerate} disabled={isLoading || !inputText.trim()} variant="outline"><RefreshCw className="h-4 w-4 mr-2" />Regenerate</Button>
                 <Button onClick={handleRegister} disabled={isLoading} className="bg-primary text-white">
@@ -306,7 +307,7 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
             </div>
           ) : (
             <div className="flex space-x-2">
-              <Textarea value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={handleKeyPress} placeholder={chatState === 'registered' ? "Want to create another poll?" : "Describe the poll you want to create..."} className="flex-1 min-h-[60px] resize-none" disabled={isLoading} />
+              <Textarea value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyPress={handleKeyPress} placeholder={chatState === 'registered' ? "Want to create another poll?" : "Describe the poll you want to create..."} className="flex-1 min-h-[60px]" disabled={isLoading} />
               <Button onClick={handleSendMessage} disabled={isLoading || !inputText.trim()}><Send className="h-4 w-4 text-white" /></Button>
             </div>
           )}
