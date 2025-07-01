@@ -299,6 +299,9 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     </Select>
   );
 
+  // Determine if poll is ended
+  const isPollEnded = poll.status === 'closed' || calculateTimeLeft(poll.endDate) === 'Ended';
+
   return (
     <Modal
       title={<span style={{ whiteSpace: 'break-spaces', wordBreak: 'break-word', width: '95%', display: 'block'}}>{poll.subject}</span>}
@@ -400,13 +403,14 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
               </p>
             </div>
 
-            {hasVoted ? (
+            {hasVoted || isPollEnded ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-green-600 mb-4">
                   <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">You have voted! Here are the current results:</span>
+                  <span className="font-medium">
+                    {isPollEnded ? 'Voting is closed. Here are the results:' : 'You have voted! Here are the current results:'}
+                  </span>
                 </div>
-
                 {modOptions.map((option: PollOption) => (
                   <div key={option.id} className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -421,7 +425,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                           />
                         )}
                         <span className="font-medium">{option.text}</span>
-                        {selectedOption === option.text && (
+                        {selectedOption === option.text && !isPollEnded && (
                           <Badge variant="outline" className="text-green-600 border-green-600">
                             Your vote
                           </Badge>
@@ -435,13 +439,18 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                     <Progress value={option.percentage} className="h-2" />
                   </div>
                 ))}
+                {isPollEnded && (
+                  <p className="text-center text-muted-foreground text-sm mt-4">
+                    This poll has ended. You can no longer vote.
+                  </p>
+                )}
               </div>
-            ) : (
+            ) :
               <div className="space-y-4">
                 <RadioGroup
                   value={selectedOption}
                   onValueChange={setSelectedOption}
-                  disabled={isVoting || hasVoted || poll.status !== "open" || !isConnected}
+                  disabled={isVoting || hasVoted || isPollEnded || poll.status !== "open" || !isConnected}
                 >
                   {modOptions.map((option: PollOption) => (
                     <div
@@ -464,15 +473,8 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                     </div>
                   ))}
                 </RadioGroup>
-
-                {isConnected ? 
-// TODO: Tooltip
-//                   <Tooltip title={poll.status !== "open" ? "Poll not yet accepting responses" : null}>
-                  <Button
-                    onClick={handleOptionVote}
-                    disabled={isVoting || hasVoted || poll.status !== "open"}
-                    className="w-full text-white" size="lg"
-                  >
+                {!isPollEnded && (
+                  <Button onClick={handleOptionVote} disabled={!selectedOption || isVoting} className="w-full text-white" size="lg">
                     {isVoting ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -485,25 +487,9 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                       </>
                     )}
                   </Button>
-//                   </Tooltip>
-                :
-                  <>
-                    {/* <WalletConnectRoundedButton
-                      onClick={openConnectModal}
-                      AAaddress={AAaddress}
-                      isConnected={connected}
-                    /> */}
-                    <WalletConnector isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
-                  </>
-                }
-
-                {poll.status === "Ended" && (
-                  <p className="text-center text-muted-foreground text-sm">
-                    This poll has ended. You can no longer vote.
-                  </p>
                 )}
               </div>
-            )}
+            }
           </div>
         }
         
