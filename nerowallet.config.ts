@@ -93,7 +93,7 @@ const allChains = [
     },
     web3auth: {
       clientId: import.meta.env.VITE_MAINNET_WEB3AUTH_ID ?? '',
-      networkType: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+      networkType: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
       uiConfig: {
         appName: 'NERO',
         mode: 'light',
@@ -109,13 +109,13 @@ const allChains = [
       loginConfig: {
         google: {
           name: 'google',
-          verifier: 'dpolls-mainnet',
+          verifier: 'dpolls-google-auth2',
           typeOfLogin: 'google',
           clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         },
         facebook: {
           name: 'facebook',
-          verifier: 'dpolls-mainnet',
+          verifier: 'dpolls-devnet2',
           typeOfLogin: 'facebook',
           clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
         },
