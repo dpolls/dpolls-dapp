@@ -92,7 +92,7 @@ const allChains = [
       tokenPaymaster: '0xC42E90D29D478ccFeCC28d3B838824E57e51F284',
     },
     web3auth: {
-      clientId: import.meta.env.VITE_MAINNET_WEB3AUTH_ID ?? '',
+      clientId: import.meta.env.VITE_TESTNET_WEB3AUTH_ID ?? '',
       networkType: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
       uiConfig: {
         appName: 'NERO',
