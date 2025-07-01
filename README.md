@@ -62,6 +62,38 @@ Try out our demo site at:
 - **Node.js**: `v22.4.1`
 - **Yarn**: `v3.8.3`
 
+## 🔧 Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```bash
+# Testnet Configuration (Development only)
+VITE_TESTNET_DPOLLS_API=
+VITE_TESTNET_DPOLLS_CONTRACT_ADDRESS=
+VITE_TESTNET_PAYMASTER_API=
+VITE_TESTNET_WEB3AUTH_ID=
+
+# Mainnet Configuration (Production)
+VITE_MAINNET_DPOLLS_API=
+VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS=
+VITE_MAINNET_PAYMASTER_API=
+VITE_MAINNET_WEB3AUTH_ID=
+
+# Web3Auth Configuration
+VITE_GOOGLE_CLIENT_ID=
+VITE_FACEBOOK_CLIENT_ID=
+
+# Enable testnets in wagmi config
+VITE_ENABLE_TESTNETS=true
+```
+
+### 🌐 Network Configuration
+
+The app automatically handles network selection based on the environment:
+
+- **Development**: Shows both testnet and mainnet networks
+- **Production**: Shows only mainnet networks (testnet is filtered out)
+
 ## 🚀 Setup Instructions
 
 ### 1. Install Dependencies

@@ -10,7 +10,7 @@ import { getCompressedAddress } from "@/utils/addressUtil";
 import { computePercentage } from "@/utils/mathUtils";
 import { Button, Form, Input, Modal, Result } from 'antd';
 import { ethers } from 'ethers';
-import { CircleDollarSign, Clock, Users, Heart } from "lucide-react";
+import { CircleDollarSign, Clock, Users, Heart, BarChart3 } from "lucide-react";
 import { useState, useEffect, useContext } from "react";
 import { handleClaimRemainingFunds, handleDonateRemainingFunds } from '@/utils/pollUtils';
 import ReactConfetti from 'react-confetti';
@@ -86,6 +86,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [isThankYouModalOpen, setIsThankYouModalOpen] = useState(false);
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDonateLoading, setIsDonateLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -159,6 +160,11 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
     );
   };
 
+  const handleViewResults = () => {
+    // Open results modal
+    setIsResultsModalOpen(true);
+  };
+
   const modOptions = poll.options.map((option: string, index: number) => {
     return { text: option, percentage: computePercentage(poll.responses, index.toString()) };
   });
@@ -214,25 +220,39 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
           <span className="text-xs text-muted-foreground">{getCompressedAddress(poll.creator)}</span>
         </div>
         <div className="flex gap-2">
-          <Button 
-            block 
-            variant="outlined" 
-            size="small" 
-            type="primary"
-            disabled={!isCreator || funds === 0}
-            onClick={() => setIsModalOpen(true)}>
-            {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
-          </Button>
-          {isCreator && funds > 0 && (
+          {poll.status === "closed" ? (
             <Button 
               block 
               variant="outlined" 
               size="small" 
               type="primary"
-              onClick={() => setIsDonateModalOpen(true)}
-              icon={<Heart className="h-3 w-3" />}>
-              Donate
+              onClick={handleViewResults}
+              icon={<BarChart3 className="h-3 w-3" />}>
+              View Result
             </Button>
+          ) : (
+            <>
+              <Button 
+                block 
+                variant="outlined" 
+                size="small" 
+                type="primary"
+                disabled={!isCreator || funds === 0}
+                onClick={() => setIsModalOpen(true)}>
+                {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
+              </Button>
+              {isCreator && funds > 0 && (
+                <Button 
+                  block 
+                  variant="outlined" 
+                  size="small" 
+                  type="primary"
+                  onClick={() => setIsDonateModalOpen(true)}
+                  icon={<Heart className="h-3 w-3" />}>
+                  Donate
+                </Button>
+              )}
+            </>
           )}
         </div>
       </CardFooter>
@@ -324,6 +344,85 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
             <p className="text-green-600 dark:text-green-400 font-medium">
               Successfully donated remaining funds from poll: {poll.subject}
             </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Results Modal */}
+      <Modal
+        title={`Poll Results: ${poll.subject}`}
+        open={isResultsModalOpen}
+        maskClosable={true}
+        onCancel={() => setIsResultsModalOpen(false)}
+        width={800}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setIsResultsModalOpen(false)}>
+            Close
+          </Button>,
+        ]}
+      >
+        <div className="py-4">
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <Badge variant="secondary">Ended</Badge>
+                <h3 className="text-xl font-semibold mt-2">{poll.subject}</h3>
+                <p className="text-muted-foreground mt-1">{poll.description}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>{poll.totalResponses} votes</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <CircleDollarSign className="h-4 w-4" />
+                <span>{funds} NERO</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-lg font-medium">Final Results</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {modOptions.map((option, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">{typeof option === 'string' ? option : option.text}</span>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {typeof option === 'string' ? '0' : option.percentage}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${typeof option === 'string' ? 0 : option.percentage}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>{poll.responses.filter((r: string) => r === index.toString()).length} votes</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="text-lg font-medium mb-4">Poll Details</h4>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Category:</span>
+                <p>{poll.category}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Created by:</span>
+                <p className="font-mono">{getCompressedAddress(poll.creator)}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Status:</span>
+                <p className="capitalize">{poll.status}</p>
+              </div>
+            </div>
           </div>
         </div>
       </Modal>

@@ -1,19 +1,20 @@
 "use client"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useNavigate, useParams } from "react-router-dom"
+import { Button } from "@/components/ui_v3/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui_v3/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v3/avatar"
+import { Badge } from "@/components/ui_v3/badge"
+import { Separator } from "@/components/ui_v3/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui_v3/tabs"
 import { ArrowLeft, Clock, Users, ExternalLink, Share2, Download, BarChart3, ListFilter } from "lucide-react"
 
 export default function ResultsPage() {
-  const router = useRouter()
+  const navigate = useNavigate()
+  const { pollId } = useParams()
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <Button variant="ghost" className="mb-6 gap-2" onClick={() => router.push("/dashboard")}>
+      <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate("/admin")}>
         <ArrowLeft className="h-4 w-4" />
         Back to Polls
       </Button>
@@ -166,7 +167,7 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          <Button variant="outline" onClick={() => router.push("/dashboard")}>
+          <Button variant="outline" onClick={() => navigate("/admin")}>
             Back to Dashboard
           </Button>
         </CardFooter>
