@@ -22,12 +22,14 @@ import { POLLS_DAPP_ABI, } from '@/constants/abi';
 import { useConfig, useSignature } from '@/hooks';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
+import { calculateTimeLeft } from '@/utils/timeUtils';
 import { ethers } from 'ethers';
 import { Dice5, Mail, Trophy } from "lucide-react";
 import { Chart } from 'react-chartjs-2';
 import { useToast } from '@/components/ui_v3/use-toast';
 import { PieChart as RePieChart, Pie, Cell, Tooltip } from 'recharts';
 import type { ChartData, ChartOptions } from 'chart.js';
+import { VotePollModal } from "@/components/modals/vote-poll-modal"
 
 interface DashboardContentProps {
   activeTab: string
@@ -214,14 +216,15 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
     return <LeaderboardPage AAaddress={AAaddress} polls={polls} fetchPolls={fetchPolls} />
     //return <LeaderboardContent />
   } else {
-    return <DashboardWithRoleSwitch polls={polls} />
+    return <DashboardWithRoleSwitch polls={polls} AAaddress={AAaddress} />
   }
 }
 
 interface DashboardWithRoleSwitchProps {
   polls: any[];
+  AAaddress: string;
 }
-function DashboardWithRoleSwitch({ polls }: DashboardWithRoleSwitchProps) {
+function DashboardWithRoleSwitch({ polls, AAaddress }: DashboardWithRoleSwitchProps) {
   const [role, setRole] = useState<'creator' | 'responder'>('creator');
   return (
     <div className="space-y-4">
@@ -242,7 +245,7 @@ function DashboardWithRoleSwitch({ polls }: DashboardWithRoleSwitchProps) {
           Responder
         </Button>
       </div>
-      {role === 'creator' ? <PollCreatorDashboard polls={polls} /> : <PollResponderDashboard />}
+      {role === 'creator' ? <PollCreatorDashboard polls={polls} /> : <PollResponderDashboard polls={polls} myAddress={AAaddress} />}
     </div>
   );
 }
@@ -253,7 +256,9 @@ interface PollCreatorDashboardProps {
 function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   // Compute summary
   const totalPolls = polls.length;
-  const totalResponses = polls.reduce((sum, poll) => sum + (poll.totalResponses || 0), 0);
+  const totalResponses = polls.reduce((sum, poll) => {
+    return sum + (poll.totalResponses ? parseInt(poll.totalResponses, 10) : 0);
+  }, 0);
   const activePolls = polls.filter(poll => poll.isOpen).length;
   // Safely sum BigNumbers for totalEarned
   let totalEarnedBN = polls.reduce((sum, poll) => {
@@ -314,7 +319,7 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   polls.forEach(poll => {
     if (poll.createdAt) {
       const date = new Date(poll.createdAt).toISOString().slice(0, 10); // YYYY-MM-DD
-      responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses || 0);
+      responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses ? parseInt(poll.totalResponses, 10) : 0);
     }
   });
   const responsesOverTime = Object.entries(responsesByDate)
@@ -503,21 +508,56 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   );
 }
 
-function PollResponderDashboard() {
-  // Dummy data for illustration
-  const summary = {
-    totalParticipated: 45,
-    totalRewards: 12,
-    activeAvailable: 3,
-  };
-  const recentPolls = [
-    { title: 'Poll Title', category: 'Category', date: 'Jun 10', reward: '0.01 ETH', status: 'Open' },
-    { title: 'Poll Title', category: 'Category', date: 'May 28', reward: '10 ERC20', status: 'Closed' },
-  ];
-  const activePolls = [
-    { title: 'Active Poll 1', category: 'Category A', endDate: 'Jun 20', reward: '0.02 ETH' },
-    { title: 'Active Poll 2', category: 'Category B', endDate: 'Jun 22', reward: '5 ERC20' },
-  ];
+function PollResponderDashboard({ polls, myAddress }: { polls: any[], myAddress: string }) {
+  const [selectedPoll, setSelectedPoll] = useState<any | null>(null);
+  const [isPollModalOpen, setIsPollModalOpen] = useState(false);
+
+  // Calculate summary data
+  // 1. Total Polls Participated: polls where user has responded (responsesWithAddress.length > 0)
+  const totalParticipated = polls.filter(poll => poll.responsesWithAddress && poll.responsesWithAddress.length > 0 && poll.responsesWithAddress.some((resp: any) => resp.address.toLowerCase() === myAddress.toLowerCase())).length;
+  console.log('totalParticipated:', totalParticipated);
+  // 2. Total Rewards: sum of rewards from responsesWithAddress where isClaimed is true
+  const totalRewardsBN = polls.reduce((sum, poll) => {
+    if (poll.responsesWithAddress) {
+      return sum.add(
+        poll.responsesWithAddress.reduce((innerSum: any, resp: any) => {
+          if (resp.isClaimed && resp.address.toLowerCase() === myAddress.toLowerCase()) {
+            try {
+              return innerSum.add(ethers.BigNumber.from(resp.reward));
+            } catch {
+              return innerSum;
+            }
+          }
+          return innerSum;
+        }, ethers.BigNumber.from(0))
+      );
+    }
+    return sum;
+  }, ethers.BigNumber.from(0));
+
+  const totalRewards = ethers.utils.formatEther(totalRewardsBN);
+  // 3. Active Polls Available: polls that are open
+  const activePolls = polls.filter(poll => poll.isOpen).slice(0, 5);
+
+  // Recent Polls Voted: polls where user has responded, sorted by latest response
+  const recentPolls = polls
+    .filter(poll => poll.responsesWithAddress && poll.responsesWithAddress.length > 0)
+    .map(poll => {
+      // Get the latest response
+      const latestResponse = poll.responsesWithAddress.reduce((latest: any, resp: any) => {
+        if (!latest || (resp.timestamp && resp.timestamp > latest.timestamp)) return resp;
+        return latest;
+      }, null);
+      return {
+        title: poll.subject,
+        category: poll.category,
+        date: latestResponse ? latestResponse.timestamp.toLocaleDateString() : '',
+        reward: latestResponse ? (typeof latestResponse.reward === 'string' ? latestResponse.reward : latestResponse.reward + ' NERO') : '',
+        status: poll.status,
+      };
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="grid gap-4">
@@ -528,7 +568,7 @@ function PollResponderDashboard() {
             <CardTitle className="text-sm font-medium">Total Polls Participated</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalParticipated}</div>
+            <div className="text-2xl font-bold">{totalParticipated}</div>
           </CardContent>
         </Card>
         <Card>
@@ -536,7 +576,7 @@ function PollResponderDashboard() {
             <CardTitle className="text-sm font-medium">Total Rewards</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalRewards}</div>
+            <div className="text-2xl font-bold">{totalRewards}</div>
           </CardContent>
         </Card>
         <Card>
@@ -544,7 +584,7 @@ function PollResponderDashboard() {
             <CardTitle className="text-sm font-medium">Active Polls Available</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.activeAvailable}</div>
+            <div className="text-2xl font-bold">{activePolls.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -598,19 +638,35 @@ function PollResponderDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {activePolls.map((poll, idx) => (
-                  <tr key={idx} className="border-b last:border-0">
-                    <td className="py-2 px-2">{poll.title}</td>
-                    <td className="py-2 px-2">{poll.category}</td>
-                    <td className="py-2 px-2">{poll.endDate}</td>
-                    <td className="py-2 px-2">{poll.reward}</td>
-                    <td className="py-2 px-2">
-                      <Button size="sm" variant="outline">Vote</Button>
-                    </td>
-                  </tr>
-                ))}
+                {activePolls.map((poll, idx) => {
+                  const isPollEnded = poll.status === 'closed' || (poll.endDate && calculateTimeLeft(poll.endDate) === 'Ended');
+                  const hasVoted = poll.responsesWithAddress && poll.responsesWithAddress.some((resp: any) => resp.address.toLowerCase() === myAddress.toLowerCase());
+                  const buttonLabel = (isPollEnded || hasVoted) ? 'View' : 'Vote';
+                  const buttonVariant = (isPollEnded || hasVoted) ? 'outline' : 'default';
+                  return (
+                    <tr key={idx} className="border-b last:border-0">
+                      <td className="py-2 px-2">{poll.subject}</td>
+                      <td className="py-2 px-2">{poll.category}</td>
+                      <td className="py-2 px-2">{poll.endDate ? poll.endDate.toLocaleDateString() : ''}</td>
+                      <td className="py-2 px-2">{poll.rewardPerResponse ? `${ethers.utils.formatEther(poll.rewardPerResponse)} NERO` : ''}</td>
+                      <td className="py-2 px-2">
+                        <Button size="sm" variant={buttonVariant} onClick={() => { setSelectedPoll(poll); setIsPollModalOpen(true); }}>{buttonLabel}</Button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+            {/* VotePollModal for voting */}
+            {selectedPoll && (
+              <VotePollModal
+                featureFlagNew={true}
+                poll={selectedPoll}
+                isOpen={isPollModalOpen}
+                onClose={() => { setIsPollModalOpen(false); setSelectedPoll(null); }}
+                fetchPolls={() => {}}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
