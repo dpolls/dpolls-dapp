@@ -241,7 +241,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
                 onClick={() => setIsModalOpen(true)}>
                 {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
               </Button>
-              {isCreator && funds > 0 && (
+              {/* {isCreator && funds > 0 && (
                 <Button 
                   block 
                   variant="outlined" 
@@ -251,7 +251,7 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
                   icon={<Heart className="h-3 w-3" />}>
                   Donate
                 </Button>
-              )}
+              )} */}
             </>
           )}
         </div>

@@ -208,24 +208,28 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
             onClick={() => setIsModalOpen(true)}>
             {isClaimed ? 'Already Claimed' : 'Claim'}
           </Button>
-          {!isClaimed && (
-            <Button 
-              block 
-              variant="outlined" 
-              size="small" 
+          {/* {!isClaimed && (
+            <Button
+              block
+              variant="outlined"
+              size="small"
               type="primary"
               disabled={isClaimed || !hasVoted}
               onClick={() => setIsDonateModalOpen(true)}
               icon={<Heart className="h-3 w-3" />}>
               Donate
             </Button>
-          )}
+          )} */}
         </div>
       </CardFooter>
       
       {/* Claim Modal */}
       <Modal
-        title={"Claim Rewards for poll: " + poll.subject}
+        title={
+          <span style={{ whiteSpace: 'break-spaces', wordBreak: 'break-word', width: '95%', display: 'block'}}>
+            {"Claim Rewards for poll: " + poll.subject}
+          </span>
+        }
         open={isModalOpen}
         maskClosable={false}
         onCancel={() => setIsModalOpen(false)}
