@@ -207,7 +207,7 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
       />
     );
   } else if (activeTab === "completed-polls") {
-    return <CompletedPolls AAaddress={AAaddress} handleTabChange={setActiveTab} polls={polls} fetchPolls={fetchPolls} />
+    return <CompletedPolls AAaddress={AAaddress} handleTabChange={setActiveTab} polls={polls} fetchPolls={fetchPolls} isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
   } else if (activeTab === "settings") {
     return <SettingsContent />
   } else if (activeTab === "games") {
@@ -286,35 +286,10 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
   // Pie chart colors
   const PIE_COLORS = ['#0088FE', '#00C49F', '#FFBB28'];
 
-  // Select dummy data based on timeUnit
+  // Select time unit for chart display
   const [timeUnit, setTimeUnit] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-  // Dummy data for each time unit
-  const dummyDaily = [
-    { date: '2024-06-01', responses: 2, trend: 2 },
-    { date: '2024-06-02', responses: 4, trend: 6 },
-    { date: '2024-06-03', responses: 3, trend: 9 },
-    { date: '2024-06-04', responses: 5, trend: 14 },
-    { date: '2024-06-05', responses: 6, trend: 20 },
-    { date: '2024-06-06', responses: 7, trend: 27 },
-    { date: '2024-06-07', responses: 8, trend: 35 },
-  ];
-  const dummyWeekly = [
-    { date: '2024-W22', responses: 10, trend: 10 },
-    { date: '2024-W23', responses: 15, trend: 25 },
-    { date: '2024-W24', responses: 20, trend: 45 },
-    { date: '2024-W25', responses: 12, trend: 57 },
-  ];
-  const dummyMonthly = [
-    { date: '2024-01', responses: 30, trend: 30 },
-    { date: '2024-02', responses: 40, trend: 70 },
-    { date: '2024-03', responses: 50, trend: 120 },
-    { date: '2024-04', responses: 60, trend: 180 },
-    { date: '2024-05', responses: 70, trend: 250 },
-    { date: '2024-06', responses: 80, trend: 330 },
-  ];
-
-  // Real data processing (retained for future use)
+  // Real data processing
   const responsesByDate: Record<string, number> = {};
   polls.forEach(poll => {
     if (poll.createdAt) {
@@ -322,19 +297,78 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
       responsesByDate[date] = (responsesByDate[date] || 0) + (poll.totalResponses ? parseInt(poll.totalResponses, 10) : 0);
     }
   });
-  const responsesOverTime = Object.entries(responsesByDate)
-    .map(([date, responses]) => ({ date, responses }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  
+  // Process data based on timeUnit
+  let processedData: { date: string; responses: number; trend: number }[] = [];
+  
+  if (timeUnit === 'daily') {
+    // Get last 7 days of data
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return date.toISOString().slice(0, 10);
+    });
+    
+    processedData = last7Days.map(date => ({
+      date,
+      responses: responsesByDate[date] || 0,
+      trend: 0 // Will be calculated below
+    }));
+  } else if (timeUnit === 'weekly') {
+    // Get last 4 weeks of data
+    const last4Weeks = Array.from({ length: 4 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (21 - i * 7));
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay());
+      return `2024-W${Math.ceil((weekStart.getTime() - new Date(2024, 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`;
+    });
+    
+    // Group daily data into weeks
+    const weeklyData: Record<string, number> = {};
+    Object.entries(responsesByDate).forEach(([date, responses]) => {
+      const weekStart = new Date(date);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      const weekKey = `2024-W${Math.ceil((weekStart.getTime() - new Date(2024, 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000))}`;
+      weeklyData[weekKey] = (weeklyData[weekKey] || 0) + responses;
+    });
+    
+    processedData = last4Weeks.map(week => ({
+      date: week,
+      responses: weeklyData[week] || 0,
+      trend: 0 // Will be calculated below
+    }));
+  } else if (timeUnit === 'monthly') {
+    // Get last 6 months of data
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - (5 - i));
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    });
+    
+    // Group daily data into months
+    const monthlyData: Record<string, number> = {};
+    Object.entries(responsesByDate).forEach(([date, responses]) => {
+      const monthKey = date.slice(0, 7); // YYYY-MM
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + responses;
+    });
+    
+    processedData = last6Months.map(month => ({
+      date: month,
+      responses: monthlyData[month] || 0,
+      trend: 0 // Will be calculated below
+    }));
+  }
+  
+  // Calculate cumulative trend
   let cumulative = 0;
-  const responsesWithTrend = responsesOverTime.map(item => {
+  const responsesWithTrend = processedData.map(item => {
     cumulative += item.responses;
     return { ...item, trend: cumulative };
   });
 
-  // Select dummy data based on timeUnit
-  let chartSource = dummyDaily;
-  if (timeUnit === 'weekly') chartSource = dummyWeekly;
-  if (timeUnit === 'monthly') chartSource = dummyMonthly;
+  // Use real data instead of dummy data
+  let chartSource = responsesWithTrend;
 
   // Chart.js data for Responses Over Time
   const chartData: ChartData<'bar'> = {
@@ -416,7 +450,7 @@ function PollCreatorDashboard({ polls }: PollCreatorDashboardProps) {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Funded</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Number(totalEarned).toFixed(2)} ETH</div>
