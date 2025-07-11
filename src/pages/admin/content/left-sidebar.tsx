@@ -18,12 +18,7 @@ export default function LeftSidebar({ activeTab, setActiveTab, isMobile }: LeftS
   const [tourActive, setTourActive] = useState(() => {
     // Initialize from localStorage, default to true if not set
     const savedTourState = localStorage.getItem('poll-admin-tour-completed')
-    console.log('savedTourState', savedTourState)
-    console.log('typeof savedTourState', typeof savedTourState)
-
     const isSaved = savedTourState !== 'true';
-    console.log('isSaved', isSaved)
-
     return isSaved;
   })
 

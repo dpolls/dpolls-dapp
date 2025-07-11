@@ -100,7 +100,6 @@ export default function LivePollsPage() {
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
-              console.log('poll mod data', result);
 
               return result;
             } catch (error) {
@@ -135,7 +134,6 @@ export default function LivePollsPage() {
       setIsLoading(false);
     }
   };
-  console.log('polls', polls)
   const pollsNotEnded = polls.filter((poll) => {
     return calculateTimeLeft(poll.endDate) !== "Ended";
   })
@@ -151,8 +149,6 @@ export default function LivePollsPage() {
 
   const categories = ["all", ...Array.from(new Set(pollsNotEnded.map((poll) => poll.category)))]
   const statuses = ["all", ...Array.from(new Set(pollsNotEnded.map((poll) => poll.status)))]
-  console.log('categories', categories)
-  console.log('statuses', statuses)
 
   return (
     <div className="min-h-screen bg-background">

@@ -96,7 +96,6 @@ export default function PollStep1({ formData, updateFormData }: PollStepProps) {
           /> */}
           <DatePicker
             onChange={(endDatePicker) => {
-              console.log("typeof endDate", typeof endDatePicker)
               const currentDate = new Date();
               const durationInMs = endDatePicker?.toDate().getTime() - currentDate.getTime();
               const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));

@@ -109,7 +109,6 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
     // Only open if character is close enough (within 15% of map width)
     if (distance < 15) {
       setActivePoll(poll)
-      console.log("active poll", poll)
     }
   }
 
@@ -150,8 +149,6 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
 
   // Vote on a poll
   const handleOptionVoteLocal = async (poll: Poll, option: string) => {
-    console.log("poll", poll)
-    console.log("option", option)
     if (!isConnected) {
       toast({
         title: "Error",
@@ -209,9 +206,7 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
 
   // Vote on a poll
   const votePoll = (pollKey: number, option: string) => {
-    console.log("voting for poll", pollKey)
     const toVotePoll = polls.find((p) => p.key === pollKey)
-    console.log("toVotePoll", toVotePoll)
     if (!toVotePoll) return
     handleOptionVoteLocal(toVotePoll, option)
   }
@@ -291,7 +286,6 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
         
         if (validOpenPolls.length > 0) {
           const notVotedPolls = validOpenPolls.filter((poll) => !poll.responsesWithAddress.some((response: any) => response.address === AAaddress))
-          console.log("notVotedPolls", notVotedPolls)
           const convertedPolls: Poll[] = notVotedPolls.map((poll, index) => ({
             key: index,
             id: poll.id,

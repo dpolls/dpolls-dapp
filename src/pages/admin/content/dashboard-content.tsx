@@ -549,7 +549,7 @@ function PollResponderDashboard({ polls, myAddress }: { polls: any[], myAddress:
   // Calculate summary data
   // 1. Total Polls Participated: polls where user has responded (responsesWithAddress.length > 0)
   const totalParticipated = polls.filter(poll => poll.responsesWithAddress && poll.responsesWithAddress.length > 0 && poll.responsesWithAddress.some((resp: any) => resp.address.toLowerCase() === myAddress.toLowerCase())).length;
-  console.log('totalParticipated:', totalParticipated);
+
   // 2. Total Rewards: sum of rewards from responsesWithAddress where isClaimed is true
   const totalRewardsBN = polls.reduce((sum, poll) => {
     if (poll.responsesWithAddress) {

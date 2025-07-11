@@ -31,7 +31,6 @@ export default function ClaimingPolls({ AAaddress, polls, fetchPolls, handleTabC
   const { isConnected } = useSignature();
   // Filter polls based on their status
   const targetPolls = polls.filter(poll => poll.status === "for-claiming")
-  console.log('for claiming', targetPolls)
 
   return (
     <div className="container mx-auto px-4 py-8">

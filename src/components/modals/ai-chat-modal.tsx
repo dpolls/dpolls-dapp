@@ -157,7 +157,6 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
     }
     setChatState('registering');
 
-    console.log('currentPoll', currentPoll);
     const pollFormForUtil = {
         ...currentPoll,
         duration: String(currentPoll.durationDays),
@@ -168,7 +167,6 @@ export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
         minContribution: currentPoll.minContribution || "0.000001",
         voteWeight: currentPoll.voteWeight || "simple",
     };
-    console.log('pollFormForUtil', pollFormForUtil);
 
     await handleCreatePoll({
         pollForm: pollFormForUtil,

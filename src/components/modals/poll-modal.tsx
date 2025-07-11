@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useContext } from "react"
+import { useState, useContext, useRef } from "react"
 import { useSignature, useSendUserOp } from '@/hooks';
 import { POLLS_DAPP_ABI,  } from '@/constants/abi';
 import { computePercentage } from '@/utils/mathUtils';
@@ -16,6 +16,7 @@ import { Progress } from "@/components/ui_v3/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui_v3/radio-group"
 import { Label } from "@/components/ui_v3/label"
 import { Separator } from "@/components/ui_v3/separator"
+import { Captcha, CaptchaRef } from "@/components/ui/captcha"
 import { Users, Trophy, Clock, Vote, Share2, ExternalLink, CheckCircle } from "lucide-react"
 import Image from "next/image"
 import { PollState } from "@/types/poll"
@@ -40,8 +41,6 @@ interface PollModalProps {
 }
 
 export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }: PollModalProps) {
-  console.log('featureFlagNew', featureFlagNew)
-  console.log('modal poll', poll)
   const config = useContext(ConfigContext);
   const { toast } = useToast();
   const [selectedOption, setSelectedOption] = useState<string>("")
@@ -54,6 +53,8 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
   const [txStatus, setTxStatus] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const { isWalletPanel, setIsWalletPanel } = useContext(SendUserOpContext)!
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -79,11 +80,18 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
       return;
     }
 
+    if (!captchaToken) {
+      toast({
+        title: "Error",
+        description: "Please complete the captcha verification",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsVoting(true);
     setUserOpHash(null);
     setTxStatus('');
-
-    console.log('selectedOption', selectedOption)
 
     try {
       await execute({
@@ -103,6 +111,9 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
 
       if (result.result === true) {
         setIsPolling(false);
+        // Reset captcha after successful vote
+        setCaptchaToken(null);
+        captchaRef.current?.reset();
         fetchPolls();
       } else if (result.transactionHash) {
         setTxStatus('Transaction hash: ' + result.transactionHash);
@@ -110,6 +121,9 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
     } catch (error) {
       console.error('Error:', error);
       setTxStatus('An error occurred');
+      // Reset captcha on error so user can try again
+      setCaptchaToken(null);
+      captchaRef.current?.reset();
     } finally {
       setIsVoting(false);
       onClose();
@@ -125,7 +139,6 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
       percentage: computePercentage(poll.responses, index.toString()) 
     };
   });
-  console.log('modOptions', modOptions)
 
   const handleShare = () => {
     if (navigator.share) {
@@ -305,7 +318,19 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
                   ))}
                 </RadioGroup>
 
-                <Button onClick={handleOptionVote} disabled={!selectedOption || isVoting} className="w-full text-white" size="lg">
+                {/* Captcha Component */}
+                <div className="flex justify-center my-4">
+                  <Captcha
+                    ref={captchaRef}
+                    onVerify={setCaptchaToken}
+                    onExpire={() => setCaptchaToken(null)}
+                    onError={() => setCaptchaToken(null)}
+                    size="normal"
+                    theme="light"
+                  />
+                </div>
+
+                <Button onClick={handleOptionVote} disabled={!selectedOption || !captchaToken || isVoting} className="w-full text-white" size="lg">
                   {isVoting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
