@@ -233,14 +233,14 @@ function DashboardWithRoleSwitch({ polls, AAaddress }: DashboardWithRoleSwitchPr
         <Button
           variant={role === 'creator' ? 'default' : 'outline'}
           onClick={() => setRole('creator')}
-          className={`w-24 ${role === 'creator' ? 'text-white' : ''}`}
+          className={`w-24 ${role === 'creator' ? '' : ''}`}
         >
           Creator
         </Button>
         <Button
           variant={role === 'responder' ? 'default' : 'outline'}
           onClick={() => setRole('responder')}
-          className={`w-24 ${role === 'responder' ? 'text-white' : ''}`}
+          className={`w-24 ${role === 'responder' ? '' : ''}`}
         >
           Responder
         </Button>

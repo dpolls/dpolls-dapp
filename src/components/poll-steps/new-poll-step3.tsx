@@ -96,7 +96,6 @@ export default function PollStep3({ formData, updateFormData }: PollStepProps) {
               id="open-immediately"
               disabled={formData.fundingType === "crowdfunded"}
               checked={formData.openImmediately}
-              className="text-white"
               onChange={(checked) => updateFormData("openImmediately", checked)}
               checkedChildren="Y" unCheckedChildren="N"
             />

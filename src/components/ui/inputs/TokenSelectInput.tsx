@@ -16,7 +16,7 @@ const TokenSelectInput: React.FC<
   const renderMultisendInput = () => (
     <button
       onClick={onOpenModal}
-      className='w-[80px] p-2 rounded-md text-secondary border border-border-primary bg-bg-primary flex items-center justify-between overflow-hidden'
+      className='w-[80px] p-2 rounded-md text-secondary border border-border-primary bg-background flex items-center justify-between overflow-hidden'
     >
       <span className='flex text-sm items-center gap-1 overflow-hidden'>
         <TokenIcon
