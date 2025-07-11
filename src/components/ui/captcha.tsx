@@ -88,7 +88,7 @@ export const Captcha = forwardRef<CaptchaRef, CaptchaProps>(
     // The actual verification happens when execute() is called
     return (
       <div className={`captcha-container ${className}`}>
-        <div className="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
+        <div className="text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
           <Shield className="h-4 w-4" />
           <span>Protected by reCAPTCHA</span>
         </div>

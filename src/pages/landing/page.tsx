@@ -245,7 +245,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center mb-8">
             <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl text-white">D</span>
+              <span className="text-primary-foreground font-bold text-2xl">D</span>
             </div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -256,7 +256,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/polls/new">
-              <Button size="lg" className="w-full sm:w-auto text-white">
+              <Button size="lg" className="w-full sm:w-auto">
                 Create Your First Poll
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -355,7 +355,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center">
               <Link to="/polls/live">
-                <Button size="lg" className="text-white">
+                <Button size="lg" className="">
                   View All Polls
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -424,7 +424,7 @@ export default function LandingPage() {
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Trophy className="h-4 w-4 text-primary-foreground text-white" />
+                      <Trophy className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">Make polls, get creative</h3>
@@ -433,7 +433,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Coins className="h-4 w-4 text-primary-foreground text-white" />
+                      <Coins className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">We split all charges 70 (you)/30 (us)</h3>
@@ -442,7 +442,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Shield className="h-4 w-4 text-primary-foreground text-white" />
+                      <Shield className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">
@@ -455,7 +455,7 @@ export default function LandingPage() {
                 <div className="space-y-6">
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Trophy className="h-4 w-4 text-primary-foreground text-white" />
+                      <Trophy className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">Create a rewards pool for winners</h3>
@@ -464,7 +464,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Coins className="h-4 w-4 text-primary-foreground text-white" />
+                      <Coins className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">Keep the money you earn, or put it back into rewards pool</h3>
@@ -473,7 +473,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <Shield className="h-4 w-4 text-primary-foreground text-white" />
+                      <Shield className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">
@@ -494,7 +494,7 @@ export default function LandingPage() {
                     className="flex-1"
                     required
                   />
-                  <Button className="text-white" type="submit">Get Started</Button>
+                  <Button className="" type="submit">Get Started</Button>
                 </form>
               </div> */}
             </div>
@@ -513,7 +513,7 @@ export default function LandingPage() {
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">1</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">1</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Indentify your subject:</strong> What feedback are you looking for?
@@ -521,7 +521,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">2</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">2</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Select a Category</strong>
@@ -529,7 +529,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">3</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">3</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Set a duration</strong> for the community to respond
@@ -537,7 +537,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">4</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">4</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Generate options.</strong> Use AI to generate them or input them yourself.
@@ -545,7 +545,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">5</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">5</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Choose who funds the rewards:</strong> Fund it yourself or crowdfund it.
@@ -553,7 +553,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-primary-foreground font-semibold text-sm text-white">6</span>
+                      <span className="text-primary-foreground font-semibold text-sm ">6</span>
                     </div>
                     <p className="text-muted-foreground">
                       <strong>Let NERO AA Payment handle the gas fees.</strong> Choose to give back to your community.
@@ -563,7 +563,7 @@ export default function LandingPage() {
               </div>
               <div className="text-center">
                 <Link to="/polls/live">
-                  <Button size="lg" className="text-white">
+                  <Button size="lg" className="">
                     View Polls
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -581,9 +581,9 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm text-white">D</span>
+                  <span className="text-primary-foreground font-bold text-sm">D</span>
                 </div>
-                <span className="text-xl font-bold text-white">dpolls</span>
+                <span className="text-xl font-bold">dpolls</span>
               </div>
               <p className="text-muted-foreground">Decentralized polling platform for the future of decision making.</p>
             </div>

@@ -72,7 +72,7 @@ const TokenSelect: React.FC<
 
   const TokenListItem: React.FC<{ token: Token }> = ({ token }) => (
     <div
-      className='flex justify-between items-center p-2 border-b cursor-pointer hover:bg-gray-50'
+      className='flex justify-between items-center p-2 border-b cursor-pointer hover:bg-muted'
       onClick={() => handleTokenClick(token)}
     >
       <div className='flex items-center space-x-2 flex-shrink-0 w-1/2'>
@@ -109,7 +109,7 @@ const TokenSelect: React.FC<
       <HeaderNavigation />
       <div className='mx-auto relative px-6'>
         <div className='flex flex-col flex-grow'>
-          <div className='w-full h-[530px] bg-white rounded-md border border-border-primary items-center justify-center py-2  mt-2'>
+          <div className='w-full h-[530px] bg-background rounded-md border border-border-primary items-center justify-center py-2  mt-2'>
             <div className='flex justify-center mb-4 px-4 mt-2'>
               <TokenSearchInput
                 searchQuery={searchQuery}

@@ -24,7 +24,7 @@ export function FloatingChatButton() {
           {isChatOpen ? (
             <X className="h-6 w-6" />
           ) : (
-            <Bot className="h-6 w-6 text-white" />
+            <Bot className="h-6 w-6" />
           )}
         </Button>
       </div>

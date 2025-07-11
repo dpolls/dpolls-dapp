@@ -15,6 +15,7 @@ import {
 } from "@/components/ui_v3/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui_v3/sheet"
 import { cn } from "@/lib/utils"
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import LeftSidebar from "@/pages/admin/content/left-sidebar"
 import RightSidebar from "@/pages/admin/content/right-sidebar"
 import DashboardContent from "@/pages/admin/content/dashboard-content"
@@ -65,6 +66,7 @@ export default function PollAdminDashboard() {
               <Bell className="h-5 w-5" />
               <span className="sr-only">Notifications</span>
             </Button> */}
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => setTourActive(true)}>
               <BadgeHelp className="h-5 w-5" />
               <span className="sr-only">Start Tour</span>

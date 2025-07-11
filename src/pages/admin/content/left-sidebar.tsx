@@ -143,7 +143,7 @@ export default function LeftSidebar({ activeTab, setActiveTab, isMobile }: LeftS
               Get a guided tour.
             </p>
             <Button
-              className="w-full mt-3 text-white" size="sm"
+              className="w-full mt-3" size="sm"
               onClick={() => setTourActive(true)}
             >
               Site Tour

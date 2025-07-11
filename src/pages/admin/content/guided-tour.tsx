@@ -257,7 +257,7 @@ export default function GuidedTour({ isActive, onClose, activeTab, setActiveTab 
       {/* Tooltip */}
       <Card
         ref={tooltipRef}
-        className="fixed z-50 w-80 shadow-lg bg-white"
+        className="fixed z-50 w-80 shadow-lg"
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,
@@ -289,7 +289,7 @@ export default function GuidedTour({ isActive, onClose, activeTab, setActiveTab 
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              <Button size="sm" onClick={nextStep} className="text-white">
+              <Button size="sm" onClick={nextStep}>
                 {currentStep === tourSteps.length - 1 ? "Finish" : "Next"}
                 {currentStep !== tourSteps.length - 1 && <ChevronRight className="h-4 w-4 ml-1" />}
               </Button>

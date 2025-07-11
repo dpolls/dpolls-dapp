@@ -205,9 +205,9 @@ export default function CreatePollPage() {
               <div key={step.id} className="flex items-center">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentStep === step.id
-                      ? "bg-primary text-primary-foreground text-white"
+                      ? "bg-primary text-primary-foreground"
                       : currentStep > step.id
-                        ? "bg-green-500 text-white"
+                        ? "bg-green-500"
                         : "bg-muted text-muted-foreground"
                     }`}
                 >
@@ -244,7 +244,7 @@ export default function CreatePollPage() {
             </Button>
 
             {currentStep === STEPS.length ? (
-              <Button type="submit" className="flex items-center text-white" disabled={isLoading}>
+              <Button type="submit" className="flex items-center" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     Creating Poll...
@@ -262,7 +262,7 @@ export default function CreatePollPage() {
                 type="button"
                 onClick={nextStep}
                 disabled={!isStepValid(currentStep)}
-                className="flex items-center text-white"
+                className="flex items-center"
               >
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
