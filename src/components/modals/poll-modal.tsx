@@ -80,20 +80,23 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
       return;
     }
 
-    if (!captchaToken) {
-      toast({
-        title: "Error",
-        description: "Please complete the captcha verification",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsVoting(true);
     setUserOpHash(null);
     setTxStatus('');
 
+    // Execute reCAPTCHA v3 before submitting
     try {
+      const token = await captchaRef.current?.execute();
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "reCAPTCHA verification failed. Please try again.",
+          variant: "destructive",
+        });
+        setIsVoting(false);
+        return;
+      }
+      setCaptchaToken(token);
       await execute({
         function: 'submitResponse',
         contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
@@ -330,7 +333,7 @@ export function PollModal({ featureFlagNew, poll, isOpen, onClose, fetchPolls }:
                   />
                 </div>
 
-                <Button onClick={handleOptionVote} disabled={!selectedOption || !captchaToken || isVoting} className="w-full text-white" size="lg">
+                <Button onClick={handleOptionVote} disabled={!selectedOption || isVoting} className="w-full text-white" size="lg">
                   {isVoting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
