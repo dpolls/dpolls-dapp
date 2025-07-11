@@ -44,8 +44,6 @@ export const getAAWalletAddress = async (accountSigner: ethers.Signer, apiKey?: 
     
     // Get the counterfactual address of the AA wallet
     const address = await simpleAccount.getSender();
-    console.log("AA wallet address:", address);
-    
     return address;
   } catch (error) {
     console.error("Error getting AA wallet address:", error);
@@ -126,19 +124,15 @@ export const executeSponsoredOperation = async (
       // Create the UserOperation
       const userOp = await builder.execute(contractAddress, value, callData);
       
-      console.log("Sending UserOperation to paymaster...");
-      
       // Send the UserOperation
       const res = await client.sendUserOperation(userOp);
-      console.log("UserOperation sent with hash:", res.userOpHash);
       
       // Wait for the transaction to be included
       const receipt = await res.wait();
       if (!receipt) {
           throw new Error("Transaction receipt is null");
       }
-      console.log("Transaction mined in block:", receipt.blockNumber);
-   
+
       return {
           userOpHash: res.userOpHash,
           transactionHash: receipt.transactionHash,

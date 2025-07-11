@@ -29,7 +29,6 @@ export default function FundingPolls({ polls, fetchPolls, handleTabChange, isWal
   const { isConnected } = useSignature();
   // Filter polls based on their status
   const fundingPolls = polls.filter(poll => poll.status === "for-funding")
-  console.log('fundingPolls', fundingPolls)
 
   return (
     <div className="container mx-auto px-4 py-8">

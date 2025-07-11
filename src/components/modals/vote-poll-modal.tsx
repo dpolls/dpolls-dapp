@@ -4,7 +4,7 @@ import { SendUserOpContext } from '@/contexts';
 import { useSendUserOp, useSignature } from '@/hooks';
 
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 
 import { Badge } from "@/components/ui_v3/badge";
 import { Button } from "@/components/ui_v3/button";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui_v3/label";
 import { Progress } from "@/components/ui_v3/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui_v3/radio-group";
 import { Separator } from "@/components/ui_v3/separator";
+import { Captcha, CaptchaRef } from "@/components/ui/captcha";
 import { PollState } from "@/types/poll";
 import { getCompressedAddress } from "@/utils/addressUtil";
 import { calculateTimeLeft } from "@/utils/timeUtils";
@@ -55,6 +56,8 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
   const [txStatus, setTxStatus] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const hasVoted = poll?.responsesWithAddress?.some((response: any) => response.address === AAaddress);
 
@@ -112,10 +115,12 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     }
   }, [isWalletConnected, setIsWalletPanel])
 
-  // Reset selected option when modal opens
+  // Reset selected option and captcha when modal opens
   useEffect(() => {
     if (isOpen) {
-      setSelectedOption("")
+      setSelectedOption("");
+      setCaptchaToken(null);
+      captchaRef.current?.reset();
     }
   }, [isOpen])
 
@@ -154,7 +159,19 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     setUserOpHash(null);
     setTxStatus('');
 
+    // Execute reCAPTCHA v3 before submitting
     try {
+      const token = await captchaRef.current?.execute();
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "reCAPTCHA verification failed. Please try again.",
+          variant: "destructive",
+        });
+        setIsVoting(false);
+        return;
+      }
+      setCaptchaToken(token);
       await execute({
         function: 'submitResponse',
         contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
@@ -173,6 +190,10 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
       if (result.result === true) {
         setIsPolling(false);
         
+        // Reset captcha after successful vote
+        setCaptchaToken(null);
+        captchaRef.current?.reset();
+        
         // Fetch updated poll data instead of calling fetchPolls
         const updatedPoll = await fetchUpdatedPollData(poll.id);
         if (updatedPoll) {
@@ -185,13 +206,15 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     } catch (error) {
       console.error('Error:', error);
       setTxStatus('An error occurred');
+      // Reset captcha on error so user can try again
+      setCaptchaToken(null);
+      captchaRef.current?.reset();
     } finally {
       setIsVoting(false);
     }
 
   };
 
-  console.log('poll', poll)
   const modOptions = poll.options.map((option: string, index: number) => {
     return {
       id: index,
@@ -200,7 +223,6 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
       percentage: computePercentage(poll.responses, index.toString())
     };
   });
-  console.log('modOptions', modOptions)
 
   const handleShare = () => {
     if (navigator.share) {
@@ -471,6 +493,21 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                     </div>
                   ))}
                 </RadioGroup>
+                
+                {/* Captcha Component */}
+                {!isPollEnded && (
+                  <div className="flex justify-center my-4">
+                    <Captcha
+                      ref={captchaRef}
+                      onVerify={setCaptchaToken}
+                      onExpire={() => setCaptchaToken(null)}
+                      onError={() => setCaptchaToken(null)}
+                      size="normal"
+                      theme="light"
+                    />
+                  </div>
+                )}
+                
                 {!isPollEnded && (
                   <Button onClick={handleOptionVote} disabled={!selectedOption || isVoting} className="w-full text-white" size="lg">
                     {isVoting ? (

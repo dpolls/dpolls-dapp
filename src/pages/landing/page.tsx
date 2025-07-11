@@ -113,7 +113,6 @@ export default function LandingPage() {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Email submitted:", email)
     setEmail("")
   }
 
@@ -199,7 +198,6 @@ export default function LandingPage() {
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
-              console.log('poll mod data', result);
               return result;
             } catch (error) {
               console.error(`Error fetching Poll #${pollId}:`, error);
@@ -236,7 +234,6 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
-  console.log('featuredPolls', featuredPolls)
 
   return (
     <div className="min-h-screen bg-background pr-9">

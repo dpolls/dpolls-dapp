@@ -14,7 +14,6 @@ export default function PollModal() {
     addToVisitedPolls(activePoll.key)
   }
 
-  console.log("activePoll", activePoll)
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
       <div className="bg-amber-100 rounded-lg shadow-xl p-6 max-w-md w-full mx-4 border-4 border-amber-800">
@@ -34,7 +33,6 @@ export default function PollModal() {
               <button
                 key={index}
                 onClick={() => {
-                  console.log("voting for option", option)
                   votePoll(activePoll.key, option)
                   // Ensure this poll is marked as visited when voted
                   addToVisitedPolls(activePoll.key)

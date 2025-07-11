@@ -59,7 +59,6 @@ export default function EnvelopeGame({ AAaddress, handleTabChange, pollsSrc, fet
   // Initialize envelopes with random positions
   useEffect(() => {
     const notVotedPolls = pollsSrc.filter((poll) => !poll.responsesWithAddress.some((response: any) => response.address === AAaddress))
-    console.log("notVotedPolls", notVotedPolls)
     const initialEnvelopes = notVotedPolls.map((poll, index) => ({
       id: poll.id,
       poll,
@@ -107,7 +106,6 @@ export default function EnvelopeGame({ AAaddress, handleTabChange, pollsSrc, fet
   }, [envelopes, showLetter])
 
   const handleEnvelopeClick = (poll) => {
-    console.log('selected poll', poll)
     setSelectedPoll(poll)
     setShowLetter(true)
   }

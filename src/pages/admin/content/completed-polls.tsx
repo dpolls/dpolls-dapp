@@ -31,7 +31,6 @@ export default function CompletedPolls({ AAaddress, polls, fetchPolls, handleTab
   const { isConnected } = useSignature();
   // Filter polls based on their status
   const targetPolls = polls.filter(poll => poll.status === "closed" || poll.status === "cancelled")
-  console.log('target poll', targetPolls)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -73,10 +72,8 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
 
   const config = useContext(ConfigContext);
   const { toast } = useToast();
-  console.log('poll', poll)
   const isCreator = poll.creator.toLowerCase() === AAaddress.toLowerCase();
-  console.log('isCreator', isCreator)
-
+  
   const { isConnected, } = useSignature();
   const { execute, waitForUserOpResult } = useSendUserOp();
   const [userOpHash, setUserOpHash] = useState<string | null>(null);

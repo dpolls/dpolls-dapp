@@ -87,17 +87,13 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
         ethers.constants.AddressZero,
         pollForm.rewardDistribution
       ];
-      console.log('pollData', pollData)
 
-      console.log('pollForm.targetFund', pollForm.targetFund)
       let value = null;
       if (pollForm.fundingType === "self-funded") {
         value = ethers.utils.parseEther(pollForm.targetFund);
       } else {
         value = ethers.utils.parseEther("0");
       }
-
-      console.log('value', value)
 
       await execute({
         function: 'createPoll',
@@ -173,7 +169,6 @@ export default function NewPollModal({ isOpen, onClose }: NewPollModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Poll created with data:", formData)
     await handleCreatePoll(formData);
   }
 

@@ -117,7 +117,6 @@ export default function CreatePollPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Poll created with data:", formData)
     await handleCreatePollWrapper(formData);
   }
 

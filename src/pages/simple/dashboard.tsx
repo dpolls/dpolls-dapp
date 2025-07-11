@@ -39,15 +39,11 @@ export default function Dashboard({ AAaddress, handleTabChange, polls, fetchPoll
   const fundingPolls = polls.filter(poll => poll.status === "for-funding")
 
   const handleFundPoll = async (poll: any, amount: any) => {
-    console.log("poll", poll);
-    console.log("amount", amount);
-
     const ethAmount = ethers.utils.parseEther(amount);
 
     // Get signer from browser wallet
     const signer = await getSigner();
     const result = await fundPoll(signer, poll.id, ethAmount, config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress);
-    console.log('result', result)
   }
 
   return (

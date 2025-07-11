@@ -158,8 +158,6 @@ const getBadge = (pollsVoted: number) => {
 }
 
 export default function LeaderboardPage( {AAaddress, polls, fetchPolls}: {AAaddress: string, polls: PollState[], fetchPolls: () => void } ) {
-  console.log('Polls:', polls);
-
   const addressResponseCounts = polls.reduce((acc, poll) => {
     poll.responsesWithAddress.forEach((response) => {
       acc[response.address] = (acc[response.address] || 0) + 1;
@@ -211,10 +209,6 @@ export default function LeaderboardPage( {AAaddress, polls, fetchPolls}: {AAaddr
   const sortedWeeklyAddresses = Object.entries(weeklyAddressResponseCounts)
     .sort(([, countA], [, countB]) => countB - countA)
     .map(([address, count]) => ({ address, count }));
-
-  console.log('Sorted addresses by response count:', sortedAddresses);
-  console.log('Sorted monthly addresses by response count:', sortedMonthlyAddresses);
-  console.log('Sorted weekly addresses by response count:', sortedWeeklyAddresses);
 
   const users: LeaderboardUser[] = sortedAddresses.map((address, index) => ({
     id: index + 1,

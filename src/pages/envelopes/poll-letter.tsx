@@ -46,8 +46,6 @@ export default function PollLetter({ poll, onClose, fetchPolls }: PollLetterProp
   }
 
   const handleOptionVote = async (poll: any, option: string) => {
-    console.log("poll", poll)
-    console.log("option", option)
     if (!isConnected) {
       toast({
         title: "Error",
