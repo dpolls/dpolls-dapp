@@ -509,7 +509,7 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
                 )}
                 
                 {!isPollEnded && (
-                  <Button onClick={handleOptionVote} disabled={!selectedOption || isVoting} className="w-full text-white" size="lg">
+                  <Button onClick={handleOptionVote} disabled={isVoting} className="w-full text-white" size="lg">
                     {isVoting ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
