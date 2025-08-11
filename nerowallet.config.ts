@@ -50,7 +50,7 @@ const allChains = [
         google: {
           name: 'google',
           typeOfLogin: 'google',
-          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID_V2,
         },
         facebook: {
           name: 'facebook',
@@ -77,7 +77,7 @@ const allChains = [
     },
     dpolls: {
       api: import.meta.env.VITE_MAINNET_DPOLLS_API ?? '',
-      contractAddress: import.meta.env.VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS ?? '',
+      contractAddress: import.meta.env.VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS_V2 ?? '',
     },
     aa: {
       bundler: 'https://bundler-mainnet.nerochain.io',
@@ -108,7 +108,7 @@ const allChains = [
         google: {
           name: 'google',
           typeOfLogin: 'google',
-          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID_V2,
         },
         facebook: {
           name: 'facebook',
