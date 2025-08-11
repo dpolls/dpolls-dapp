@@ -77,7 +77,7 @@ const allChains = [
     },
     dpolls: {
       api: import.meta.env.VITE_MAINNET_DPOLLS_API ?? '',
-      contractAddress: import.meta.env.VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS ?? '',
+      contractAddress: import.meta.env.VITE_MAINNET_DPOLLS_CONTRACT_ADDRESS_V2 ?? '',
     },
     aa: {
       bundler: 'https://bundler-mainnet.nerochain.io',
