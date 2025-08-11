@@ -50,7 +50,7 @@ const allChains = [
         google: {
           name: 'google',
           typeOfLogin: 'google',
-          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID_V2,
         },
         facebook: {
           name: 'facebook',
@@ -108,7 +108,7 @@ const allChains = [
         google: {
           name: 'google',
           typeOfLogin: 'google',
-          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID_V2,
         },
         facebook: {
           name: 'facebook',
