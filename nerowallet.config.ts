@@ -109,13 +109,13 @@ const allChains = [
       loginConfig: {
         google: {
           name: 'google',
-          verifier: 'dpolls-mainnet',
+          verifier: 'dPolls-devnet',
           typeOfLogin: 'google',
           clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         },
         facebook: {
           name: 'facebook',
-          verifier: 'dpolls-mainnet',
+          verifier: 'dPolls-devnet',
           typeOfLogin: 'facebook',
           clientId: import.meta.env.VITE_FACEBOOK_CLIENT_ID,
         },
