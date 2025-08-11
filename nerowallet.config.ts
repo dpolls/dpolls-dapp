@@ -93,7 +93,7 @@ const allChains = [
     },
     web3auth: {
       clientId: import.meta.env.VITE_MAINNET_WEB3AUTH_ID ?? '',
-      networkType: WEB3AUTH_NETWORK.SAPPHIRE_MAINNET,
+      networkType: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
       uiConfig: {
         appName: 'NERO',
         mode: 'light',
