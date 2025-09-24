@@ -14,6 +14,7 @@ import ManagePolls from '@/pages/admin/content/manage-polls';
 import LeaderboardPage from '@/pages/leaderboard/page';
 import CreatePoll from "@/pages/simple/create-poll";
 import CompletedPolls from './completed-polls';
+import Projects from './projects';
 
 import { Button } from "@/components/ui_v3/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui_v3/card";
@@ -115,6 +116,7 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
                 subject: pollDetails.subject,
                 description: pollDetails.description,
                 category: pollDetails.category,
+                projectId: pollDetails.projectId || "",
                 status: pollDetails.status,
                 createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
                 options: pollDetails.options,
@@ -208,6 +210,8 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
     );
   } else if (activeTab === "completed-polls") {
     return <CompletedPolls AAaddress={AAaddress} handleTabChange={setActiveTab} polls={polls} fetchPolls={fetchPolls} isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
+  } else if (activeTab === "projects") {
+    return <Projects AAaddress={AAaddress} isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
   } else if (activeTab === "settings") {
     return <SettingsContent />
   } else if (activeTab === "games") {

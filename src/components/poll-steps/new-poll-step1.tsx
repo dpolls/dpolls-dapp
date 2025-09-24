@@ -9,6 +9,10 @@ import { PollState } from "@/types/poll";
 import { Calendar, Sparkles } from "lucide-react";
 import dayjs from 'dayjs';
 import { getTagColor } from "@/utils/tagColors";
+import { useState, useEffect } from "react";
+import { ethers } from "ethers";
+import { POLLS_DAPP_ABI } from "@/constants/abi";
+import { useConfig, useSignature } from "@/hooks";
 
 const { Option } = Select;
 
@@ -18,17 +22,69 @@ interface PollStepProps {
 }
 
 export default function PollStep1({ formData, updateFormData }: PollStepProps) {
+  const [projects, setProjects] = useState<Array<{ id: string; owner: string; isOwned: boolean }>>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const config = useConfig();
+  const { AAaddress } = useSignature();
+
   // Check if today is the end of the month
   const today = dayjs();
   const isEndOfMonth = today.date() === today.daysInMonth();
-  
+
   // Convert formData.endDate to dayjs if it exists, otherwise use null
-  const defaultDate = formData.endDate && formData.endDate instanceof Date 
-    ? dayjs(formData.endDate) 
+  const defaultDate = formData.endDate && formData.endDate instanceof Date
+    ? dayjs(formData.endDate)
     : null;
 
   // Set default picker value to next month if today is end of month
   const defaultPickerValue = isEndOfMonth ? today.add(1, 'month').startOf('month') : undefined;
+
+  // Fetch available projects
+  useEffect(() => {
+    if (AAaddress && config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+      fetchProjects();
+    }
+  }, [AAaddress, config]);
+
+  const fetchProjects = async () => {
+    try {
+      setLoadingProjects(true);
+
+      const provider = new ethers.providers.JsonRpcProvider(
+        config.chains[config.currentNetworkIndex].chain.rpc
+      );
+
+      const pollsContract = new ethers.Contract(
+        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+        POLLS_DAPP_ABI,
+        provider
+      );
+
+      const allProjectIds = await pollsContract.getAllProjects();
+
+      if (allProjectIds.length > 0) {
+        const projectsWithOwnership = await Promise.all(
+          allProjectIds.map(async (projectId: string) => {
+            const owner = await pollsContract.getProjectOwner(projectId);
+            return {
+              id: projectId,
+              owner,
+              isOwned: owner.toLowerCase() === AAaddress.toLowerCase()
+            };
+          })
+        );
+
+        setProjects(projectsWithOwnership);
+      } else {
+        setProjects([]);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setProjects([]);
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
 
   return (
     <Card>
@@ -81,6 +137,35 @@ export default function PollStep1({ formData, updateFormData }: PollStepProps) {
               <Option value="food" style={{ color: getTagColor('category', 'food') }}>Food</Option>
               <Option value="other" style={{ color: getTagColor('category', 'other') }}>Other</Option>
             </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="project">Project *</Label>
+          <Select
+            placeholder="Select a project (only projects you own)"
+            allowClear
+            onChange={(value) => updateFormData("projectId", value)}
+            style={{ width: "100%" }}
+            value={formData.projectId}
+            loading={loadingProjects}
+            notFoundContent={loadingProjects ? "Loading projects..." : "No projects available"}
+          >
+            {projects.filter(p => p.isOwned).map((project) => (
+              <Option key={project.id} value={project.id}>
+                {project.id}
+              </Option>
+            ))}
+          </Select>
+          {projects.length === 0 && !loadingProjects && (
+            <p className="text-xs text-muted-foreground">
+              No projects found. Create a project first in the Projects tab.
+            </p>
+          )}
+          {projects.filter(p => p.isOwned).length === 0 && projects.length > 0 && !loadingProjects && (
+            <p className="text-xs text-muted-foreground">
+              You don't own any projects. Only project owners can create polls.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

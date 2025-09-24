@@ -7,6 +7,7 @@ export interface PollState {
   subject: string;
   description: string;
   category: string;
+  projectId: string;
   status: string;
   createdAt: Date;
   viewType: string;

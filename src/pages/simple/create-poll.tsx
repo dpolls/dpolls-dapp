@@ -72,6 +72,7 @@ export default function CreatePoll() {
     description: "",
     category: "",
     duration: "",
+    projectId: "",
     useAI: false,
   
     // Step 2: Options
