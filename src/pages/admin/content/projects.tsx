@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui_v3/tab
 import { Plus, Users, BarChart3, Settings, Trash2, UserMinus, UserPlus } from "lucide-react"
 import { ethers } from 'ethers'
 import { POLLS_DAPP_ABI } from '@/constants/abi'
-import { useConfig, useSignature } from '@/hooks'
+import { useConfig, useSignature, useSendUserOp } from '@/hooks'
 
 interface Project {
   id: string
@@ -38,7 +38,8 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
   const [newProjectOwner, setNewProjectOwner] = useState("")
   const { toast } = useToast()
   const config = useConfig()
-  const { simpleAccountInstance } = useSignature()
+  const { isConnected } = useSignature()
+  const { execute, waitForUserOpResult } = useSendUserOp()
 
   useEffect(() => {
     if (AAaddress) {
@@ -138,49 +139,59 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
     try {
       setIsLoading(true)
 
-      if (!simpleAccountInstance) {
-        throw new Error("Wallet not connected")
+      if (!isConnected) {
+        toast({
+          title: "Error",
+          description: "Please connect your wallet first",
+          variant: "destructive",
+        })
+        return
       }
 
-      // Create transaction data
-      const pollsContract = new ethers.Contract(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        POLLS_DAPP_ABI,
-        new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc)
-      )
-
-      const txData = pollsContract.interface.encodeFunctionData("createProject", [
-        newProjectName.trim(),
-        newProjectOwner.trim()
-      ])
-
-      // Send transaction using execute method
-      const tx = await simpleAccountInstance.execute(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        0,
-        txData
-      )
+      if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+        toast({
+          title: "Error",
+          description: "Contract address not configured",
+          variant: "destructive",
+        })
+        return
+      }
 
       toast({
         title: "Transaction Sent",
         description: "Creating project...",
       })
 
-      // Wait for transaction
-      await tx.wait()
-
-      toast({
-        title: "Success",
-        description: `Project "${newProjectName}" created successfully!`,
+      // Execute transaction using useSendUserOp pattern
+      await execute({
+        function: 'createProject',
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+        abi: POLLS_DAPP_ABI,
+        params: [newProjectName.trim(), newProjectOwner.trim()],
+        value: 0,
       })
 
-      // Reset form and close dialog
-      setNewProjectName("")
-      setNewProjectOwner("")
-      setIsCreateDialogOpen(false)
+      const result = await waitForUserOpResult()
 
-      // Refresh projects
-      await fetchProjects()
+      if (result.result === true) {
+        toast({
+          title: "Success",
+          description: `Project "${newProjectName}" created successfully!`,
+        })
+
+        // Reset form and close dialog
+        setNewProjectName("")
+        setNewProjectOwner("")
+        setIsCreateDialogOpen(false)
+
+        // Refresh projects
+        await fetchProjects()
+      } else {
+        toast({
+          title: "Transaction Submitted",
+          description: result.transactionHash ? `TX: ${result.transactionHash}` : "Please wait...",
+        })
+      }
     } catch (error: any) {
       console.error('Error creating project:', error)
       toast({
@@ -206,41 +217,53 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
     try {
       setIsLoading(true)
 
-      if (!simpleAccountInstance) {
-        throw new Error("Wallet not connected")
+      if (!isConnected) {
+        toast({
+          title: "Error",
+          description: "Please connect your wallet first",
+          variant: "destructive",
+        })
+        return
       }
 
-      const pollsContract = new ethers.Contract(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        POLLS_DAPP_ABI,
-        new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc)
-      )
-
-      const txData = pollsContract.interface.encodeFunctionData("transferProjectOwnership", [
-        projectId,
-        newOwner
-      ])
-
-      const tx = await simpleAccountInstance.execute(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        0,
-        txData
-      )
+      if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+        toast({
+          title: "Error",
+          description: "Contract address not configured",
+          variant: "destructive",
+        })
+        return
+      }
 
       toast({
         title: "Transaction Sent",
         description: "Transferring ownership...",
       })
 
-      await tx.wait()
-
-      toast({
-        title: "Success",
-        description: "Project ownership transferred successfully!",
+      await execute({
+        function: 'transferProjectOwnership',
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+        abi: POLLS_DAPP_ABI,
+        params: [projectId, newOwner],
+        value: 0,
       })
 
-      // Refresh projects
-      await fetchProjects()
+      const result = await waitForUserOpResult()
+
+      if (result.result === true) {
+        toast({
+          title: "Success",
+          description: "Project ownership transferred successfully!",
+        })
+
+        // Refresh projects
+        await fetchProjects()
+      } else {
+        toast({
+          title: "Transaction Submitted",
+          description: result.transactionHash ? `TX: ${result.transactionHash}` : "Please wait...",
+        })
+      }
     } catch (error: any) {
       console.error('Error transferring ownership:', error)
       toast({
@@ -257,38 +280,53 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
     try {
       setIsLoading(true)
 
-      if (!simpleAccountInstance) {
-        throw new Error("Wallet not connected")
+      if (!isConnected) {
+        toast({
+          title: "Error",
+          description: "Please connect your wallet first",
+          variant: "destructive",
+        })
+        return
       }
 
-      const pollsContract = new ethers.Contract(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        POLLS_DAPP_ABI,
-        new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc)
-      )
-
-      const txData = pollsContract.interface.encodeFunctionData("initializeDefaultProject", [])
-
-      const tx = await simpleAccountInstance.execute(
-        config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        0,
-        txData
-      )
+      if (!config?.chains[config?.currentNetworkIndex]?.dpolls?.contractAddress) {
+        toast({
+          title: "Error",
+          description: "Contract address not configured",
+          variant: "destructive",
+        })
+        return
+      }
 
       toast({
         title: "Transaction Sent",
         description: "Initializing default project...",
       })
 
-      await tx.wait()
-
-      toast({
-        title: "Success",
-        description: "Default project initialized and existing polls migrated!",
+      await execute({
+        function: 'initializeDefaultProject',
+        contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+        abi: POLLS_DAPP_ABI,
+        params: [],
+        value: 0,
       })
 
-      // Refresh projects
-      await fetchProjects()
+      const result = await waitForUserOpResult()
+
+      if (result.result === true) {
+        toast({
+          title: "Success",
+          description: "Default project initialized and existing polls migrated!",
+        })
+
+        // Refresh projects
+        await fetchProjects()
+      } else {
+        toast({
+          title: "Transaction Submitted",
+          description: result.transactionHash ? `TX: ${result.transactionHash}` : "Please wait...",
+        })
+      }
     } catch (error: any) {
       console.error('Error initializing default project:', error)
       toast({

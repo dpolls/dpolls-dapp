@@ -1,0 +1,2 @@
+Please read the contract source codes at /Users/east/workspace/nero/dpolls-contract.
+Make sure that the contract ABI that the frontend (this project) uses is at sync with the smart contract's source codes.
