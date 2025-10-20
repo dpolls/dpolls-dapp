@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Home, BarChart3, PieChart, PlusCircle, Settings, Users, ChevronDown, FolderOpen } from "lucide-react"
+import { Home, BarChart3, PieChart, PlusCircle, Settings, Users, ChevronDown, FolderOpen, Shield } from "lucide-react"
 import { Button } from "@/components/ui_v3/button"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui_v3/collapsible"
@@ -132,6 +132,21 @@ export default function LeftSidebar({ activeTab, setActiveTab, isMobile }: LeftS
           >
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Poll
+          </Button>
+        </div>
+      </div>
+
+      <div className="px-3 py-2 border-t border-red-200 mt-2">
+        <h2 className="mb-2 px-4 text-sm font-semibold text-red-600">Admin</h2>
+        <div className="space-y-1">
+          <Button
+            variant={activeTab === "super-admin" ? "destructive" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setActiveTab("super-admin")}
+            data-tour="super-admin-nav"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Super Admin
           </Button>
 
           {/* <Button

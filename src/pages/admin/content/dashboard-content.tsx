@@ -12,6 +12,7 @@ import ClaimingPolls from '@/pages/admin/content/claiming-polls';
 import FundingPolls from '@/pages/admin/content/funding-polls';
 import ManagePolls from '@/pages/admin/content/manage-polls';
 import PollResponders from '@/pages/admin/content/poll-responders';
+import SuperAdmin from '@/pages/admin/content/super-admin';
 import LeaderboardPage from '@/pages/leaderboard/page';
 import CreatePoll from "@/pages/simple/create-poll";
 import CompletedPolls from './completed-polls';
@@ -220,6 +221,14 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
         fetchPolls={fetchPolls}
         isWalletConnected={isWalletConnected}
         setIsWalletConnected={setIsWalletConnected}
+      />
+    );
+  } else if (activeTab === "super-admin") {
+    return (
+      <SuperAdmin
+        AAaddress={AAaddress}
+        polls={polls}
+        fetchPolls={fetchPolls}
       />
     );
   } else if (activeTab === "projects") {
