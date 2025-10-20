@@ -40,7 +40,7 @@ export const POLLS_DAPP_ABI = [
   'constructor(address _tokenManager, address _fundingManager, address _responseManager, address _pollManager)',
   // Fns
   'function deposit() payable',
-  'function createPoll(tuple(address creator, string subject, string description, string category, string viewType, string[] options, uint256 rewardPerResponse, uint256 durationDays, uint256 maxResponses, uint256 minContribution, string fundingType, bool isOpenImmediately, uint256 targetFund, address rewardToken, string rewardDistribution) params) payable',
+  'function createPoll(tuple(address creator, string subject, string description, string category, string viewType, string[] options, uint256 rewardPerResponse, uint256 durationDays, uint256 maxResponses, uint256 minContribution, string fundingType, bool isOpenImmediately, uint256 targetFund, address rewardToken, string rewardDistribution, string projectId) params) payable',
   'function submitResponse(uint256 pollId, string response) payable',
   'function closePoll(uint256 pollId) payable',
   'function cancelPoll(uint256 pollId) payable',
@@ -54,6 +54,10 @@ export const POLLS_DAPP_ABI = [
   'function donateReward(uint256 pollId) payable',
   'function donateRemainingFunds(uint256 pollId) payable',
   'function claimRemainingFunds(uint256 pollId) payable',
+  // Project management functions
+  'function createProject(string projectId, address projectOwner)',
+  'function transferProjectOwnership(string projectId, address newOwner)',
+  'function initializeDefaultProject()',
   // Views
   'function getCommunityFundBalance(address token) view returns (uint256)',
   'function getDonorTotalByToken(address donor, address token) view returns (uint256)',
@@ -61,10 +65,17 @@ export const POLLS_DAPP_ABI = [
   'function getOptions(uint256 pollId) view returns (string[])',
   'function getPollStatus(uint256 pollId) view returns (bool, uint256, uint256)',
   'function getAllPollIds() view returns (uint256[])',
-  'function getPoll(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution))',
-  'function getPollWithoutOptions(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution))',
+  'function getPoll(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution, string projectId))',
+  'function getPollWithoutOptions(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution, string projectId))',
   'function getPollResponses(uint256 pollId) view returns (tuple(address responder, string response, uint256 weight, uint256 timestamp, bool isClaimed, uint256 reward)[])',
-  'function getActivePolls() view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
+  'function getActivePolls() view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen, string projectId) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
+  // Project view functions
+  'function getProjectPolls(string projectId) view returns (uint256[])',
+  'function getProjectActivePolls(string projectId) view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen, string projectId) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
+  'function getProjectOwner(string projectId) view returns (address)',
+  'function getAllProjects() view returns (string[])',
+  'function getProjectStats(string projectId) view returns (uint256 totalPolls, uint256 activePolls, uint256 totalFunding)',
+  'function getUserPollsByProject(address user, string projectId) view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen, string projectId) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
   // Events
   'event PollCreated(uint256 pollId, address creator, string subject)',
   'event PollUpdated(uint256 pollId, address creator, string sub)',
@@ -94,6 +105,20 @@ export const POLL_MANAGER_ABI = [
   'function getUserPolls(address user) view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
   'function getUserActivePolls(address user) view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
   'function getActivePolls() view returns (tuple(tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, bool isOpen) content, tuple(uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, uint256 funds, address rewardToken, string rewardDistribution) settings)[])',
+]
+
+export const SIMPLE_PROJECT_MANAGER_ABI = [
+  'constructor()',
+  'function createProject(string projectId, address projectOwner)',
+  'function transferProjectOwnership(string projectId, address newOwner)',
+  'function getProjectOwner(string projectId) view returns (address)',
+  'function getAllProjects() view returns (string[])',
+  'function isProjectOwner(string projectId, address user) view returns (bool)',
+  'function projectOwners(string) view returns (address)',
+  'function projectExists(string) view returns (bool)',
+  // Events
+  'event ProjectCreated(string indexed projectId, address indexed owner)',
+  'event ProjectOwnershipTransferred(string indexed projectId, address indexed oldOwner, address indexed newOwner)'
 ]
 
 export const FUNDING_MANAGER_ABI = [

@@ -48,6 +48,7 @@ export const handleCreatePoll = async ({
         description: pollForm.description,
         category: pollForm.category,
         viewType: pollForm.viewType,
+        projectId: pollForm.projectId,
         options: pollForm.options,
         durationDays: parseInt(pollForm.duration || "90"),
         isOpenImmediately: pollForm.openImmediately
@@ -87,6 +88,7 @@ export const handleCreatePoll = async ({
         description: pollForm.description,
         category: pollForm.category,
         viewType: pollForm.viewType,
+        projectId: pollForm.projectId,
         options: pollForm.options,
         rewardPerResponse: ethers.utils.parseEther(rewardPerResponse).toString(),
         durationDays: parseInt(pollForm.duration || "90"),

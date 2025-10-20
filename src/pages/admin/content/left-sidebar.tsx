@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Home, BarChart3, PieChart, PlusCircle, Settings, Users, ChevronDown } from "lucide-react"
+import { Home, BarChart3, PieChart, PlusCircle, Settings, Users, ChevronDown, FolderOpen } from "lucide-react"
 import { Button } from "@/components/ui_v3/button"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui_v3/collapsible"
@@ -104,6 +104,16 @@ export default function LeftSidebar({ activeTab, setActiveTab, isMobile }: LeftS
             <PieChart className="mr-2 h-4 w-4" />
             Analytics
           </Button> */}
+
+          <Button
+            variant={activeTab === "projects" ? "secondary" : "ghost"}
+            className="w-full justify-start"
+            onClick={() => setActiveTab("projects")}
+            data-tour="projects-nav"
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Projects
+          </Button>
 
           <Button
             variant={activeTab === "create-poll" ? "secondary" : "ghost"}
