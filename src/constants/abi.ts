@@ -58,6 +58,13 @@ export const POLLS_DAPP_ABI = [
   'function createProject(string projectId, address projectOwner)',
   'function transferProjectOwnership(string projectId, address newOwner)',
   'function initializeDefaultProject()',
+  // Owner/Admin functions
+  'function owner() view returns (address)',
+  'function pause()',
+  'function unpause()',
+  'function paused() view returns (bool)',
+  'function emergencyWithdraw(address token, uint256 amount, address recipient)',
+  'function emergencySetPollStatus(uint256 pollId, string newStatus)',
   // Views
   'function getCommunityFundBalance(address token) view returns (uint256)',
   'function getDonorTotalByToken(address donor, address token) view returns (uint256)',
