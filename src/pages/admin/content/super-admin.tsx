@@ -15,7 +15,7 @@ import { ethers } from 'ethers'
 import { POLLS_DAPP_ABI } from '@/constants/abi'
 import { useConfig, useSignature, useSendUserOp } from '@/hooks'
 import { PollState } from "@/types/poll"
-import { isContractOwner, isContractPaused, formatAdminActionResult } from '@/utils/adminUtils'
+import { isContractOwner, isContractOwnerWithEOA, getEOAAddress, isContractPaused, formatAdminActionResult } from '@/utils/adminUtils'
 import { getCompressedAddress } from "@/utils/addressUtil"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v2/avatar"
 
@@ -32,6 +32,9 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
   const { execute, waitForUserOpResult } = useSendUserOp()
 
   const [isOwner, setIsOwner] = useState(false)
+  const [ownerType, setOwnerType] = useState<'aa' | 'eoa' | null>(null)
+  const [eoaAddress, setEoaAddress] = useState<string | null>(null)
+  const [contractOwner, setContractOwner] = useState<string | null>(null)
   const [isCheckingOwner, setIsCheckingOwner] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -70,12 +73,22 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
     }
 
     setIsCheckingOwner(true)
-    const ownerCheck = await isContractOwner(
+
+    // Get EOA address from MetaMask
+    const eoa = await getEOAAddress()
+    setEoaAddress(eoa)
+
+    // Check if either AA or EOA is the owner
+    const { isOwner: ownerCheck, ownerType: type, contractOwner: owner } = await isContractOwnerWithEOA(
       config.chains[config.currentNetworkIndex].dpolls.contractAddress,
       AAaddress,
+      eoa,
       config.chains[config.currentNetworkIndex].chain.rpc
     )
+
     setIsOwner(ownerCheck)
+    setOwnerType(type)
+    setContractOwner(owner)
     setIsCheckingOwner(false)
   }
 
@@ -357,12 +370,29 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
           title="Access Denied"
           subTitle="Only the contract owner can access this page."
           extra={
-            <Alert className="max-w-md mx-auto">
-              <Shield className="h-4 w-4" />
-              <AlertDescription>
-                Connected wallet: {getCompressedAddress(AAaddress)}
-              </AlertDescription>
-            </Alert>
+            <div className="max-w-2xl mx-auto space-y-4">
+              <Alert className="text-left">
+                <Shield className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div>
+                      <strong>Contract Owner:</strong> {contractOwner ? getCompressedAddress(contractOwner) : 'Unknown'}
+                    </div>
+                    <div>
+                      <strong>Your AA Address:</strong> {getCompressedAddress(AAaddress)}
+                    </div>
+                    {eoaAddress && (
+                      <div>
+                        <strong>Your EOA Address:</strong> {getCompressedAddress(eoaAddress)}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-2">
+                      Neither your AA (Smart Account) address nor your EOA (MetaMask) address matches the contract owner.
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
           }
         />
       </div>

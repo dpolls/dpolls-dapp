@@ -2,6 +2,32 @@ import { ethers } from 'ethers';
 import { POLLS_DAPP_ABI } from '@/constants/abi';
 
 /**
+ * Get EOA address from MetaMask or connected wallet
+ * @returns Promise<string | null> - EOA address or null if not available
+ */
+export const getEOAAddress = async (): Promise<string | null> => {
+  try {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      return null;
+    }
+
+    // Request accounts from MetaMask
+    const accounts = await window.ethereum.request({
+      method: 'eth_requestAccounts'
+    });
+
+    if (accounts && accounts.length > 0) {
+      return accounts[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error getting EOA address:', error);
+    return null;
+  }
+};
+
+/**
  * Check if the given address is the contract owner
  * @param contractAddress - The polls contract address
  * @param userAddress - The user's wallet address to check
@@ -36,6 +62,48 @@ export const isContractOwner = async (
   } catch (error) {
     console.error('Error checking contract owner:', error);
     return false;
+  }
+};
+
+/**
+ * Check if either AA address or EOA address is the contract owner
+ * @param contractAddress - The polls contract address
+ * @param aaAddress - The AA (Smart Account) address
+ * @param eoaAddress - The EOA (MetaMask) address, can be null
+ * @param rpcUrl - The RPC URL for the network
+ * @returns Promise<{isOwner: boolean, ownerType: 'aa' | 'eoa' | null}> - Ownership status and type
+ */
+export const isContractOwnerWithEOA = async (
+  contractAddress: string,
+  aaAddress: string,
+  eoaAddress: string | null,
+  rpcUrl: string
+): Promise<{ isOwner: boolean; ownerType: 'aa' | 'eoa' | null; contractOwner: string | null }> => {
+  try {
+    if (!contractAddress || !rpcUrl) {
+      return { isOwner: false, ownerType: null, contractOwner: null };
+    }
+
+    // Get contract owner address
+    const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+    const contract = new ethers.Contract(contractAddress, POLLS_DAPP_ABI, provider);
+    const ownerAddress = await contract.owner();
+
+    // Check if AA address is owner
+    if (aaAddress && ownerAddress.toLowerCase() === aaAddress.toLowerCase()) {
+      return { isOwner: true, ownerType: 'aa', contractOwner: ownerAddress };
+    }
+
+    // Check if EOA address is owner (fallback)
+    if (eoaAddress && ownerAddress.toLowerCase() === eoaAddress.toLowerCase()) {
+      return { isOwner: true, ownerType: 'eoa', contractOwner: ownerAddress };
+    }
+
+    // Neither address is owner
+    return { isOwner: false, ownerType: null, contractOwner: ownerAddress };
+  } catch (error) {
+    console.error('Error checking contract owner with EOA:', error);
+    return { isOwner: false, ownerType: null, contractOwner: null };
   }
 };
 
