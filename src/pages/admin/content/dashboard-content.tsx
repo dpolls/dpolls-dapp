@@ -11,6 +11,7 @@ import ActivePolls from '@/pages/admin/content/active-polls';
 import ClaimingPolls from '@/pages/admin/content/claiming-polls';
 import FundingPolls from '@/pages/admin/content/funding-polls';
 import ManagePolls from '@/pages/admin/content/manage-polls';
+import PollResponders from '@/pages/admin/content/poll-responders';
 import LeaderboardPage from '@/pages/leaderboard/page';
 import CreatePoll from "@/pages/simple/create-poll";
 import CompletedPolls from './completed-polls';
@@ -210,6 +211,17 @@ export default function DashboardContent({ activeTab, setActiveTab }: DashboardC
     );
   } else if (activeTab === "completed-polls") {
     return <CompletedPolls AAaddress={AAaddress} handleTabChange={setActiveTab} polls={polls} fetchPolls={fetchPolls} isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
+  } else if (activeTab === "poll-responders") {
+    return (
+      <PollResponders
+        AAaddress={AAaddress}
+        handleTabChange={setActiveTab}
+        polls={polls}
+        fetchPolls={fetchPolls}
+        isWalletConnected={isWalletConnected}
+        setIsWalletConnected={setIsWalletConnected}
+      />
+    );
   } else if (activeTab === "projects") {
     return <Projects AAaddress={AAaddress} isWalletConnected={isWalletConnected} setIsWalletConnected={setIsWalletConnected} />
   } else if (activeTab === "settings") {

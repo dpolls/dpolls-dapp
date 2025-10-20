@@ -92,6 +92,15 @@ export default function LeftSidebar({ activeTab, setActiveTab, isMobile }: LeftS
               >
                 Manage
               </Button>
+              <Button
+                variant={activeTab === "poll-responders" ? "secondary" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setActiveTab("poll-responders")}
+                data-tour="poll-responders-nav"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Responders
+              </Button>
             </CollapsibleContent>
           </Collapsible>
 

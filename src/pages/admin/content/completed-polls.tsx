@@ -217,40 +217,39 @@ function PollCard({ poll, type, fetchPolls, AAaddress }:
           <span className="text-xs text-muted-foreground">{getCompressedAddress(poll.creator)}</span>
         </div>
         <div className="flex gap-2">
-          {poll.status === "closed" ? (
-            <Button 
-              block 
-              variant="outlined" 
-              size="small" 
+          <Button
+            block
+            variant="outlined"
+            size="small"
+            type="primary"
+            disabled={!isCreator || funds === 0}
+            onClick={() => setIsModalOpen(true)}>
+            {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
+          </Button>
+
+          {poll.status === "closed" && (
+            <Button
+              block
+              variant="outlined"
+              size="small"
               type="primary"
               onClick={handleViewResults}
               icon={<BarChart3 className="h-3 w-3" />}>
               View Result
             </Button>
-          ) : (
-            <>
-              <Button 
-                block 
-                variant="outlined" 
-                size="small" 
-                type="primary"
-                disabled={!isCreator || funds === 0}
-                onClick={() => setIsModalOpen(true)}>
-                {!isCreator ? 'Not Creator' : funds === 0 ? 'No Funds' : 'Refund'}
-              </Button>
-              {/* {isCreator && funds > 0 && (
-                <Button 
-                  block 
-                  variant="outlined" 
-                  size="small" 
-                  type="primary"
-                  onClick={() => setIsDonateModalOpen(true)}
-                  icon={<Heart className="h-3 w-3" />}>
-                  Donate
-                </Button>
-              )} */}
-            </>
           )}
+
+          {/* {isCreator && funds > 0 && (
+            <Button
+              block
+              variant="outlined"
+              size="small"
+              type="primary"
+              onClick={() => setIsDonateModalOpen(true)}
+              icon={<Heart className="h-3 w-3" />}>
+              Donate
+            </Button>
+          )} */}
         </div>
       </CardFooter>
       
