@@ -26,6 +26,9 @@ export default function LandingPageHeader() {
                 <Link to="/polls/live" className="text-muted-foreground hover:text-foreground">
                   Live Polls
                 </Link>
+                <Link to="/claims_legacy" className="text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 font-medium">
+                  Claims (Legacy)
+                </Link>
                 <Link to="/polls/new" className="text-muted-foreground hover:text-foreground">
                   Create Poll
                 </Link>
@@ -68,6 +71,13 @@ export default function LandingPageHeader() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Live Polls
+            </Link>
+            <Link
+              to="/claims_legacy"
+              className="block text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 font-medium py-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Claims (Legacy)
             </Link>
             <Link
               to="/polls/new"

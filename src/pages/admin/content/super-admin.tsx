@@ -18,6 +18,7 @@ import { PollState } from "@/types/poll"
 import { isContractOwner, isContractOwnerWithEOA, getEOAAddress, isContractPaused, formatAdminActionResult } from '@/utils/adminUtils'
 import { getCompressedAddress } from "@/utils/addressUtil"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v2/avatar"
+import { convertTimestampToDate } from '@/utils/format'
 
 interface SuperAdminProps {
   AAaddress: string
@@ -40,6 +41,8 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<any[]>([])
   const [communityFundBalance, setCommunityFundBalance] = useState("0")
+  const [legacyPolls, setLegacyPolls] = useState<PollState[]>([])
+  const [isLoadingLegacy, setIsLoadingLegacy] = useState(false)
 
   // Emergency action modals
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false)
@@ -63,6 +66,7 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
     fetchProjects()
     fetchCommunityFund()
     checkPausedStatus()
+    fetchLegacyPolls()
   }, [AAaddress, isConnected])
 
   const checkOwnership = async () => {
@@ -153,6 +157,90 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
       setCommunityFundBalance(ethers.utils.formatEther(balance))
     } catch (error) {
       console.error('Error fetching community fund:', error)
+    }
+  }
+
+  const fetchLegacyPolls = async () => {
+    const legacyContractAddress = import.meta.env.VITE_LEGACY_DPOLLS_CONTRACT_ADDRESS
+
+    if (!legacyContractAddress || !config?.chains[config?.currentNetworkIndex]?.chain?.rpc) return
+
+    try {
+      setIsLoadingLegacy(true)
+
+      const provider = new ethers.providers.JsonRpcProvider(config.chains[config.currentNetworkIndex].chain.rpc)
+      const pollsContract = new ethers.Contract(
+        legacyContractAddress,
+        POLLS_DAPP_ABI,
+        provider
+      )
+
+      const allPollIds = await pollsContract.getAllPollIds()
+
+      if (allPollIds.length > 0) {
+        const fetchedPolls: PollState[] = await Promise.all(
+          allPollIds.map(async (pollId: number) => {
+            try {
+              const pollDetails = await pollsContract.getPoll(pollId)
+              const pollResponses = await pollsContract.getPollResponses(pollId)
+
+              const modPollResponses = pollResponses?.map((response: any) => response.response)
+              const pollResponsesWithAddress = pollResponses?.map((response: any) => ({
+                address: response.responder,
+                response: response.response,
+                isClaimed: response.isClaimed,
+                weight: response.weight,
+                timestamp: convertTimestampToDate(Number(response.timestamp)),
+                reward: response.reward
+              }))
+
+              return {
+                id: pollId,
+                creator: pollDetails.creator,
+                subject: pollDetails.subject,
+                description: pollDetails.description,
+                category: pollDetails.category,
+                status: pollDetails.status,
+                createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
+                options: pollDetails.options,
+                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
+                maxResponses: pollDetails.maxResponses.toString(),
+                endDate: new Date(Number(pollDetails.endTime) * 1000),
+                isOpen: pollDetails.isOpen,
+                totalResponses: pollResponsesWithAddress.length,
+                funds: pollDetails.funds.toString(),
+                minContribution: pollDetails.minContribution.toString(),
+                targetFund: pollDetails.targetFund.toString(),
+                responses: modPollResponses,
+                responsesWithAddress: pollResponsesWithAddress,
+                viewType: pollDetails.viewType,
+                rewardToken: pollDetails.rewardToken,
+                fundingType: pollDetails.fundingType,
+                rewardDistribution: pollDetails.rewardDistribution,
+                projectId: pollDetails.projectId
+              }
+            } catch (error) {
+              console.error(`Error fetching legacy poll ${pollId}:`, error)
+              return null
+            }
+          })
+        )
+
+        // Filter out null values and only show "for-claiming" polls with unclaimed rewards
+        const validPolls = fetchedPolls.filter(poll =>
+          poll !== null &&
+          poll.status === "for-claiming" &&
+          poll.responsesWithAddress?.some(response => !response.isClaimed)
+        )
+
+        setLegacyPolls(validPolls)
+      } else {
+        setLegacyPolls([])
+      }
+    } catch (error) {
+      console.error('Error fetching legacy polls:', error)
+    } finally {
+      setIsLoadingLegacy(false)
     }
   }
 
@@ -503,10 +591,11 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="projects">All Projects</TabsTrigger>
           <TabsTrigger value="polls">All Polls</TabsTrigger>
+          <TabsTrigger value="legacy-claims">Legacy Claims</TabsTrigger>
           <TabsTrigger value="emergency">Emergency</TabsTrigger>
         </TabsList>
 
@@ -654,6 +743,215 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="legacy-claims" className="space-y-4">
+          <Alert className="mb-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+            <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+            <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+              Legacy Contract Claims: Monitoring unclaimed rewards from the previous contract version.
+              Use this data to identify users who need to migrate their claims.
+            </AlertDescription>
+          </Alert>
+
+          {isLoadingLegacy ? (
+            <div className="flex justify-center p-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading legacy claims data...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Legacy Claims Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Legacy Polls with Claims</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">{legacyPolls.length}</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Unclaimed Count</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">
+                      {legacyPolls.reduce((sum, poll) =>
+                        sum + (poll.responsesWithAddress?.filter(r => !r.isClaimed).length || 0), 0
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Claimed Count</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold">
+                      {legacyPolls.reduce((sum, poll) =>
+                        sum + (poll.responsesWithAddress?.filter(r => r.isClaimed).length || 0), 0
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Unclaimed Rewards</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold">
+                      {legacyPolls.reduce((sum, poll) => {
+                        const unclaimedCount = poll.responsesWithAddress?.filter(r => !r.isClaimed).length || 0
+                        const rewardPerResponse = Number(ethers.utils.formatEther(poll.rewardPerResponse || "0"))
+                        return sum + (unclaimedCount * rewardPerResponse)
+                      }, 0).toFixed(4)}
+                    </p>
+                    <p className="text-sm text-gray-500">NERO</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Legacy Claims Table */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Legacy Claims Overview</CardTitle>
+                      <CardDescription>Polls from legacy contract with unclaimed rewards</CardDescription>
+                    </div>
+                    <Button
+                      onClick={fetchLegacyPolls}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Refresh Data
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {legacyPolls.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Badge variant="default" className="mb-4">All Claims Processed</Badge>
+                      <p className="text-muted-foreground">
+                        No legacy polls with unclaimed rewards found. All users have claimed their rewards!
+                      </p>
+                    </div>
+                  ) : (
+                    <Table
+                      columns={[
+                        {
+                          title: 'Poll ID',
+                          dataIndex: 'id',
+                          key: 'id',
+                          width: 80
+                        },
+                        {
+                          title: 'Subject',
+                          dataIndex: 'subject',
+                          key: 'subject',
+                          render: (text: string) => <span className="truncate max-w-xs block">{text}</span>
+                        },
+                        {
+                          title: 'Project',
+                          dataIndex: 'projectId',
+                          key: 'projectId',
+                          render: (projectId: string) => projectId || '-'
+                        },
+                        {
+                          title: 'Total Responses',
+                          dataIndex: 'totalResponses',
+                          key: 'totalResponses'
+                        },
+                        {
+                          title: 'Unclaimed',
+                          key: 'unclaimed',
+                          render: (_: any, poll: PollState) => {
+                            const unclaimedCount = poll.responsesWithAddress?.filter(r => !r.isClaimed).length || 0
+                            return (
+                              <Badge variant={unclaimedCount > 0 ? "destructive" : "secondary"}>
+                                {unclaimedCount}
+                              </Badge>
+                            )
+                          }
+                        },
+                        {
+                          title: 'Claimed',
+                          key: 'claimed',
+                          render: (_: any, poll: PollState) => {
+                            const claimedCount = poll.responsesWithAddress?.filter(r => r.isClaimed).length || 0
+                            return (
+                              <Badge variant="default">
+                                {claimedCount}
+                              </Badge>
+                            )
+                          }
+                        },
+                        {
+                          title: 'Reward/Response',
+                          dataIndex: 'rewardPerResponse',
+                          key: 'rewardPerResponse',
+                          render: (reward: string) => `${Number(ethers.utils.formatEther(reward || "0")).toFixed(4)} NERO`
+                        },
+                        {
+                          title: 'Total Unclaimed Value',
+                          key: 'unclaimedValue',
+                          render: (_: any, poll: PollState) => {
+                            const unclaimedCount = poll.responsesWithAddress?.filter(r => !r.isClaimed).length || 0
+                            const rewardPerResponse = Number(ethers.utils.formatEther(poll.rewardPerResponse || "0"))
+                            const totalValue = unclaimedCount * rewardPerResponse
+                            return `${totalValue.toFixed(4)} NERO`
+                          }
+                        }
+                      ]}
+                      dataSource={legacyPolls}
+                      rowKey="id"
+                      pagination={{
+                        pageSize: 20,
+                        showTotal: (total) => `Total ${total} polls with unclaimed rewards`
+                      }}
+                      expandable={{
+                        expandedRowRender: (poll: PollState) => {
+                          const unclaimedResponders = poll.responsesWithAddress?.filter(r => !r.isClaimed) || []
+                          return (
+                            <div className="p-4 bg-gray-50 dark:bg-gray-900">
+                              <h4 className="font-semibold mb-2">Unclaimed Responders ({unclaimedResponders.length})</h4>
+                              {unclaimedResponders.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">All rewards have been claimed</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {unclaimedResponders.map((responder, idx) => (
+                                    <div key={idx} className="flex items-center justify-between text-sm">
+                                      <div className="flex items-center gap-2">
+                                        <Avatar className="h-6 w-6">
+                                          <AvatarFallback>{responder.address.slice(0, 2)}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-mono">{getCompressedAddress(responder.address)}</span>
+                                      </div>
+                                      <Badge variant="outline" className="text-yellow-600 border-yellow-500">
+                                        Unclaimed
+                                      </Badge>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        },
+                        rowExpandable: (poll: PollState) => (poll.responsesWithAddress?.filter(r => !r.isClaimed).length || 0) > 0
+                      }}
+                      scroll={{ x: 'max-content' }}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="emergency" className="space-y-4">
