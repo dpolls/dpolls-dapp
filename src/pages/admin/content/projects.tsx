@@ -35,7 +35,6 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
   const [isLoading, setIsLoading] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [newProjectName, setNewProjectName] = useState("")
-  const [newProjectOwner, setNewProjectOwner] = useState("")
   const { toast } = useToast()
   const config = useConfig()
   const { isConnected } = useSignature()
@@ -118,24 +117,6 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
       return
     }
 
-    if (!newProjectOwner.trim()) {
-      toast({
-        title: "Error",
-        description: "Project owner address is required",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!ethers.utils.isAddress(newProjectOwner)) {
-      toast({
-        title: "Error",
-        description: "Invalid owner address",
-        variant: "destructive",
-      })
-      return
-    }
-
     try {
       setIsLoading(true)
 
@@ -167,7 +148,7 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
         function: 'createProject',
         contractAddress: config.chains[config.currentNetworkIndex].dpolls.contractAddress,
         abi: POLLS_DAPP_ABI,
-        params: [newProjectName.trim(), newProjectOwner.trim()],
+        params: [newProjectName.trim()],
         value: 0,
       })
 
@@ -181,7 +162,6 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
 
         // Reset form and close dialog
         setNewProjectName("")
-        setNewProjectOwner("")
         setIsCreateDialogOpen(false)
 
         // Refresh projects
@@ -354,11 +334,19 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
                 New Project
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent
+              className="sm:max-w-[425px]"
+              onInteractOutside={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.hasAttribute('data-radix-dialog-overlay')) {
+                  e.preventDefault();
+                }
+              }}
+            >
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>
-                  Create a new project to organize your polls.
+                  Create a new project to organize your polls. You will automatically become the project owner.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -370,17 +358,8 @@ export default function Projects({ AAaddress, isWalletConnected, setIsWalletConn
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="project-owner">Owner Address</Label>
-                  <Input
-                    id="project-owner"
-                    placeholder="0x..."
-                    value={newProjectOwner}
-                    onChange={(e) => setNewProjectOwner(e.target.value)}
-                  />
                   <p className="text-xs text-muted-foreground">
-                    Only the owner can create polls in this project
+                    You will be set as the project owner and can create polls in this project
                   </p>
                 </div>
               </div>

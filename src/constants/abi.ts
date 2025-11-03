@@ -36,6 +36,34 @@ export const ERC721_ABI = [
   'event ApprovalForAll(address indexed owner, address indexed operator, bool approved)',
 ]
 
+// Legacy contract ABI (without projectId field)
+export const POLLS_DAPP_LEGACY_ABI = [
+  'function deposit() payable',
+  'function createPoll(tuple(address creator, string subject, string description, string category, string viewType, string[] options, uint256 rewardPerResponse, uint256 durationDays, uint256 maxResponses, uint256 minContribution, string fundingType, bool isOpenImmediately, uint256 targetFund, address rewardToken, string rewardDistribution) params) payable',
+  'function submitResponse(uint256 pollId, string response) payable',
+  'function closePoll(uint256 pollId) payable',
+  'function cancelPoll(uint256 pollId) payable',
+  'function openPoll(uint256 pollId) payable',
+  'function forClaiming(uint256 pollId) payable',
+  'function forFunding(uint256 pollId) payable',
+  'function updateTargetFund(uint256 pollId, uint256 newTargetFund) payable',
+  'function fundPoll(uint256 pollId) payable',
+  'function claimReward(uint256 pollId)',
+  'function refund(uint256 pollId)',
+  // Views
+  'function getPollStatus(uint256 pollId) view returns (bool, uint256, uint256)',
+  // Legacy getPoll WITHOUT projectId field
+  'function getPoll(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, string[] options, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution))',
+  'function getPollWithoutOptions(uint256 pollId) view returns (tuple(address creator, string subject, string description, string category, string status, string viewType, uint256 rewardPerResponse, uint256 maxResponses, uint256 durationDays, uint256 minContribution, string fundingType, uint256 targetFund, uint256 endTime, bool isOpen, uint256 totalResponses, uint256 funds, address rewardToken, string rewardDistribution))',
+  'function getPollResponses(uint256 pollId) view returns (tuple(address responder, string response, uint256 weight, uint256 timestamp, bool isClaimed, uint256 reward)[])',
+  'function getPollSubject(uint256 pollId) view returns (string)',
+  'function getAllPollIds() view returns (uint256[])',
+  'function getTotalPolls() view returns (uint256)',
+  'function getPollsRange(uint256 start, uint256 end) view returns (uint256[])',
+  'function paused() view returns (bool)',
+  'function owner() view returns (address)',
+]
+
 export const POLLS_DAPP_ABI = [
   'constructor(address _tokenManager, address _fundingManager, address _responseManager, address _pollManager)',
   // Fns
@@ -55,7 +83,7 @@ export const POLLS_DAPP_ABI = [
   'function donateRemainingFunds(uint256 pollId) payable',
   'function claimRemainingFunds(uint256 pollId) payable',
   // Project management functions
-  'function createProject(string projectId, address projectOwner)',
+  'function createProject(string projectId)',
   'function transferProjectOwnership(string projectId, address newOwner)',
   'function initializeDefaultProject()',
   // Owner/Admin functions

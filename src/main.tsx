@@ -11,6 +11,8 @@ import LandingPage from '@/pages/landing/page'
 import PollAdminPage from '@/pages/admin/page'
 import CreatePollPage from '@/pages/landing/polls/new/page'
 import LivePollsPage from '@/pages/landing/polls/live/page'
+import LegacyClaimsPage from '@/pages/claims/legacy/page'
+import LegacyDistributePage from '@/pages/claims/legacy/distribute'
 import { FloatingChatButton } from '@/components/ui_v3/floating-chat-button'
 
 
@@ -29,6 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/admin" element={<PollAdminPage />} />
             <Route path="/polls/new" element={<CreatePollPage />} />
             <Route path="/polls/live" element={<LivePollsPage />} />
+            <Route path="/claims_legacy" element={<LegacyClaimsPage />} />
+            <Route path="/claims_legacy_distribute" element={<LegacyDistributePage />} />
           </Routes>
           <FloatingChatButton />
         </SocialWallet>
