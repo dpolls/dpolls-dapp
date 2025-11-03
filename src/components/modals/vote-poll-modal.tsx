@@ -5,6 +5,7 @@ import { useSendUserOp, useSignature } from '@/hooks';
 
 import { POLLS_DAPP_ABI, } from '@/constants/abi';
 import { useContext, useEffect, useState, useRef } from "react";
+import { fetchPollWithFallback } from '@/utils/pollFetcher';
 
 import { Badge } from "@/components/ui_v3/badge";
 import { Button } from "@/components/ui_v3/button";
@@ -74,32 +75,34 @@ export function VotePollModal({ featureFlagNew, poll, isOpen, onClose, fetchPoll
     try {
       const rpcUrl = config.chains[config.currentNetworkIndex].chain.rpc;
       const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
-      const contract = new ethers.Contract(
+
+      // Use fallback utility to fetch poll with automatic ABI fallback
+      const pollData = await fetchPollWithFallback(
+        pollId,
         config.chains[config.currentNetworkIndex].dpolls.contractAddress,
-        POLLS_DAPP_ABI,
         provider
       );
 
-      // Fetch poll data
-      const pollData = await contract.getPoll(pollId);
-      const responses = await contract.getPollResponses(pollId);
+      if (!pollData) {
+        return null;
+      }
 
       // Transform the data to match PollState interface
       const updatedPoll = {
         ...poll,
-        totalResponses: pollData.totalResponses.toNumber(),
-        funds: pollData.funds.toString(),
+        totalResponses: parseInt(pollData.totalResponses),
+        funds: pollData.funds,
         status: pollData.status,
         isOpen: pollData.isOpen,
-        responses: responses.map((response: any) => response.response),
-        responsesWithAddress: responses.map((response: any) => ({
-          address: response.responder,
-          response: response.response,
+        responses: pollData.responsesWithAddress?.map((response: any) => response.address) || [],
+        responsesWithAddress: pollData.responsesWithAddress?.map((response: any) => ({
+          address: response.address,
+          response: response.address,
           isClaimed: response.isClaimed,
-          weight: response.weight.toNumber(),
+          weight: 1, // Default weight
           timestamp: new Date(response.timestamp.toNumber() * 1000),
-          reward: response.reward.toString()
-        }))
+          reward: pollData.rewardPerResponse
+        })) || []
       };
 
       return updatedPoll;

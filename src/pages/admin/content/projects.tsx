@@ -457,7 +457,7 @@ function ProjectCard({ project, onTransferOwnership, isLoading }: ProjectCardPro
           </div>
           <div>
             <div className="text-2xl font-bold">{Number(project.totalFunding).toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">ETH Funded</div>
+            <div className="text-xs text-muted-foreground">NERO Funded</div>
           </div>
         </div>
 

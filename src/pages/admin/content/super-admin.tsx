@@ -19,6 +19,7 @@ import { isContractOwner, isContractOwnerWithEOA, getEOAAddress, isContractPause
 import { getCompressedAddress } from "@/utils/addressUtil"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui_v2/avatar"
 import { convertTimestampToDate } from '@/utils/format'
+import { fetchPollWithFallback } from '@/utils/pollFetcher'
 
 interface SuperAdminProps {
   AAaddress: string
@@ -181,43 +182,51 @@ export default function SuperAdmin({ AAaddress, polls, fetchPolls }: SuperAdminP
         const fetchedPolls: PollState[] = await Promise.all(
           allPollIds.map(async (pollId: number) => {
             try {
-              const pollDetails = await pollsContract.getPoll(pollId)
-              const pollResponses = await pollsContract.getPollResponses(pollId)
+              // Use fallback utility to fetch poll with automatic ABI fallback
+              const pollData = await fetchPollWithFallback(
+                pollId,
+                legacyContractAddress,
+                provider
+              )
 
-              const modPollResponses = pollResponses?.map((response: any) => response.response)
-              const pollResponsesWithAddress = pollResponses?.map((response: any) => ({
-                address: response.responder,
-                response: response.response,
+              if (!pollData) {
+                return null
+              }
+
+              const modPollResponses = pollData.responsesWithAddress?.map((response: any) => response.address)
+              const pollResponsesWithAddress = pollData.responsesWithAddress?.map((response: any) => ({
+                address: response.address,
+                response: response.address,
                 isClaimed: response.isClaimed,
-                weight: response.weight,
+                weight: 1, // Default weight
                 timestamp: convertTimestampToDate(Number(response.timestamp)),
-                reward: response.reward
+                reward: pollData.rewardPerResponse
               }))
 
               return {
                 id: pollId,
-                creator: pollDetails.creator,
-                subject: pollDetails.subject,
-                description: pollDetails.description,
-                category: pollDetails.category,
-                status: pollDetails.status,
-                createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
-                options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
-                maxResponses: pollDetails.maxResponses.toString(),
-                endDate: new Date(Number(pollDetails.endTime) * 1000),
-                isOpen: pollDetails.isOpen,
-                totalResponses: pollResponsesWithAddress.length,
-                funds: pollDetails.funds.toString(),
-                minContribution: pollDetails.minContribution.toString(),
-                targetFund: pollDetails.targetFund.toString(),
+                creator: pollData.creator,
+                subject: pollData.subject,
+                description: pollData.description,
+                category: pollData.category,
+                status: pollData.status,
+                createdAt: new Date(Number(pollData.endTime) * 1000 - Number(pollData.durationDays) * 24 * 60 * 60 * 1000),
+                options: pollData.options,
+                rewardPerResponse: pollData.rewardPerResponse,
+                maxResponses: pollData.maxResponses,
+                endDate: new Date(Number(pollData.endTime) * 1000),
+                isOpen: pollData.isOpen,
+                totalResponses: pollResponsesWithAddress?.length || 0,
+                funds: pollData.funds,
+                minContribution: pollData.minContribution,
+                targetFund: pollData.targetFund,
                 responses: modPollResponses,
                 responsesWithAddress: pollResponsesWithAddress,
-                viewType: pollDetails.viewType,
-                rewardToken: pollDetails.rewardToken,
-                fundingType: pollDetails.fundingType,
-                rewardDistribution: pollDetails.rewardDistribution,
-                projectId: pollDetails.projectId
+                viewType: pollData.viewType,
+                rewardToken: pollData.rewardToken,
+                fundingType: pollData.fundingType,
+                rewardDistribution: pollData.rewardDistribution,
+                projectId: pollData.projectId
               }
             } catch (error) {
               console.error(`Error fetching legacy poll ${pollId}:`, error)

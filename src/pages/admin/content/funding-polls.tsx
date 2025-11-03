@@ -252,7 +252,7 @@ function PollCard({ poll, type, fetchPolls }:
             style={{ textAlign: 'center' }}
           >
             <InputNumber
-              placeholder="Amount in ETH"
+              placeholder="Amount in NERO"
               min="0.001"
               step="0.001"
               addonAfter={selectAfter}

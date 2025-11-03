@@ -7,6 +7,7 @@ import { useSignature, useSendUserOp, useConfig } from '@/hooks';
 import { ethers } from 'ethers';
 import { ConfigContext } from '@/contexts';
 import { useToast } from '@/components/ui_v3/use-toast';
+import { fetchPollWithFallback } from '@/utils/pollFetcher';
 
 // Define types
 type Position = {
@@ -242,35 +243,45 @@ export function GameProvider({ children, AAaddress, handleTabChange }:
         const fetchedPolls = await Promise.all(
           allPollIds.map(async (pollId: number) => {
             try {
-              // Get poll details using the polls function
-              const pollDetails = await pollsContract.getPoll(pollId);
-              const pollResponses = await pollsContract.getPollResponses(pollId);
-              const modPollResponses = pollResponses.map((response: any) => {
-                return response.response
+              // Use fallback utility to fetch poll with automatic ABI fallback
+              const pollData = await fetchPollWithFallback(
+                pollId,
+                config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+                provider
+              );
+
+              if (!pollData) {
+                return null;
+              }
+
+              // Transform responses to match expected format
+              const modPollResponses = pollData.responsesWithAddress?.map((response: any) => {
+                return response.address;
               });
-              const pollResonsesWithAddress = pollResponses.map((response: any) => {
+
+              const pollResonsesWithAddress = pollData.responsesWithAddress?.map((response: any) => {
                 return {
-                  address: response.responder,
-                  response: response.response,
+                  address: response.address,
+                  response: response.address,
                   isClaimed: response.isClaimed,
                 }
               });
-              
+
               // Format the poll data
               return {
                 id: pollId,
-                creator: pollDetails.creator,
-                subject: pollDetails.subject,
-                description: pollDetails.description,
-                options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
-                maxResponses: pollDetails.maxResponses.toString(),
-                endDate: new Date(Number(pollDetails.endTime) * 1000),
-                isOpen: pollDetails.isOpen,
-                totalResponses: pollDetails.totalResponses.toString(),
-                funds: pollDetails.funds.toString(),
-                minContribution: pollDetails.minContribution.toString(),
-                targetFund: pollDetails.targetFund.toString(),
+                creator: pollData.creator,
+                subject: pollData.subject,
+                description: pollData.description,
+                options: pollData.options,
+                rewardPerResponse: pollData.rewardPerResponse,
+                maxResponses: pollData.maxResponses,
+                endDate: new Date(Number(pollData.endTime) * 1000),
+                isOpen: pollData.isOpen,
+                totalResponses: pollData.totalResponses,
+                funds: pollData.funds,
+                minContribution: pollData.minContribution,
+                targetFund: pollData.targetFund,
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };

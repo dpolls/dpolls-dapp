@@ -9,6 +9,7 @@ import { POLLS_DAPP_ABI, } from '@/constants/abi';
 import { PollState } from '@/types/poll';
 import { convertTimestampToDate } from '@/utils/format';
 import { ethers } from 'ethers';
+import { fetchPollWithFallback } from '@/utils/pollFetcher';
 
 import { VotePollModal } from "@/components/modals/vote-poll-modal";
 import { Button } from "@/components/ui_v3/button";
@@ -159,42 +160,52 @@ export default function LandingPage() {
         const fetchedPolls: PollState[] = await Promise.all(
           allPollIds.map(async (pollId: number) => {
             try {
-              // Get poll details using the polls function
-              const pollDetails = await pollsContract.getPoll(pollId);
-              const pollResponses = await pollsContract.getPollResponses(pollId);
-              const modPollResponses = pollResponses?.map((response: any) => {
-                return response.response
+              // Use fallback utility to fetch poll with automatic ABI fallback
+              const pollData = await fetchPollWithFallback(
+                pollId,
+                config.chains[config.currentNetworkIndex].dpolls.contractAddress,
+                provider
+              );
+
+              if (!pollData) {
+                return null;
+              }
+
+              // Transform responses to match expected format
+              const modPollResponses = pollData.responsesWithAddress?.map((response: any) => {
+                return response.address;
               });
-              const pollResonsesWithAddress = pollResponses?.map((response: any) => {
+
+              const pollResonsesWithAddress = pollData.responsesWithAddress?.map((response: any) => {
                 return {
-                  address: response.responder,
-                  response: response.response,
+                  address: response.address,
+                  response: response.address,
                   isClaimed: response.isClaimed,
-                  weight: response.weight,
+                  weight: 1, // Default weight
                   timestamp: convertTimestampToDate(Number(response.timestamp)),
-                  reward: response.reward
+                  reward: pollData.rewardPerResponse
                 }
               });
 
               // Format the poll data
               const result = {
                 id: pollId,
-                creator: pollDetails.creator,
-                subject: pollDetails.subject,
-                category: pollDetails.category,
-                description: pollDetails.description,
-                status: pollDetails.status,
-                createdAt: new Date(Number(pollDetails.endTime) * 1000 - Number(pollDetails.durationDays) * 24 * 60 * 60 * 1000),
-                options: pollDetails.options,
-                rewardPerResponse: pollDetails.rewardPerResponse.toString(),
-                maxResponses: pollDetails.maxResponses.toString(),
-                endDate: new Date(Number(pollDetails.endTime) * 1000),
-                isOpen: pollDetails.isOpen,
+                creator: pollData.creator,
+                subject: pollData.subject,
+                category: pollData.category,
+                description: pollData.description,
+                status: pollData.status,
+                createdAt: new Date(Number(pollData.endTime) * 1000 - Number(pollData.durationDays) * 24 * 60 * 60 * 1000),
+                options: pollData.options,
+                rewardPerResponse: pollData.rewardPerResponse,
+                maxResponses: pollData.maxResponses,
+                endDate: new Date(Number(pollData.endTime) * 1000),
+                isOpen: pollData.isOpen,
                 isFeatured: true || getRandomBoolean(),
-                totalResponses: pollDetails.totalResponses.toString(),
-                funds: pollDetails.funds.toString(),
-                minContribution: pollDetails.minContribution.toString(),
-                targetFund: pollDetails.targetFund.toString(),
+                totalResponses: pollData.totalResponses,
+                funds: pollData.funds,
+                minContribution: pollData.minContribution,
+                targetFund: pollData.targetFund,
                 responses: modPollResponses,
                 responsesWithAddress: pollResonsesWithAddress
               };
